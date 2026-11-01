@@ -30,11 +30,21 @@ const AUTH_COLORS = {
 
 export default function RegisterScreen() {
     const router = useRouter();
-    const { registerWithDevice } = useAuth();
+    const { registerWithDevice, loginAsDemo } = useAuth();
     const { security } = useDeviceAuth();
 
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
+
+    const handleDemoEnter = async () => {
+        try {
+            setLoading(true);
+            await loginAsDemo('user');
+            router.replace('/(tabs)/tab1');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleRegister = async () => {
         const trimmedEmail = email.trim();
@@ -134,6 +144,16 @@ export default function RegisterScreen() {
                                 loading={loading}
                                 style={styles.registerBtn}
                             />
+
+                            {/* 1-Tap Demo Option */}
+                            <TouchableOpacity
+                                style={styles.demoSkipBtn}
+                                onPress={handleDemoEnter}
+                                activeOpacity={0.8}
+                            >
+                                <Ionicons name="flash-outline" size={15} color={AUTH_COLORS.accent} />
+                                <Text style={styles.demoSkipText}>Skip Setup & Enter as Demo Learner</Text>
+                            </TouchableOpacity>
 
                         </View>
 
@@ -310,5 +330,22 @@ const styles = StyleSheet.create({
         borderColor: AUTH_COLORS.border,
         backgroundColor: '#FFFFFF',
         borderRadius: 14,
+    },
+    demoSkipBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 10,
+        backgroundColor: AUTH_COLORS.accentLight,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#F1D5C9',
+        gap: 6,
+        marginTop: 4,
+    },
+    demoSkipText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: AUTH_COLORS.accent,
     },
 });

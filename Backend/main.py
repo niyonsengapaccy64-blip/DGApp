@@ -10,12 +10,75 @@ from seed_data import seed_products_if_empty
 
 def auto_migrate_schema():
     """
-    Auto-detects and aligns database column types for PostgreSQL / Neon:
-    Converts products.id, carts.id, and orders.id from INTEGER/SERIAL to VARCHAR(255)
-    to resolve psycopg.errors.DatatypeMismatch when UUID strings are inserted.
+    Auto-detects and aligns the live PostgreSQL schema to match the ORM models.
+    Handles:
+      - users.device_token  : adds column if missing (passwordless device auth)
+      - users.password_hash : drops legacy password column if still present
+      - users.created_at    : adds column if missing
+      - users.updated_at    : adds column if missing
+      - products/carts/orders.id : converts INTEGER SERIAL to VARCHAR(255) for UUID support
     """
+    logs = []
     if engine.dialect.name == "postgresql":
         try:
+            # 1. users table: add device_token if missing
+            with engine.begin() as conn:
+                res = conn.execute(text(
+                    "SELECT column_name FROM information_schema.columns "
+                    "WHERE table_name = 'users' AND column_name = 'device_token';"
+                )).fetchone()
+                if not res:
+                    msg = "[AutoMigrate] Adding device_token column to users table..."
+                    print(msg)
+                    logs.append(msg)
+                    conn.execute(text(
+                        "ALTER TABLE users ADD COLUMN IF NOT EXISTS device_token TEXT;"
+                    ))
+                    logs.append("[AutoMigrate] device_token column added successfully.")
+
+            # 2. users table: drop legacy password_hash if present
+            with engine.begin() as conn:
+                res = conn.execute(text(
+                    "SELECT column_name FROM information_schema.columns "
+                    "WHERE table_name = 'users' AND column_name = 'password_hash';"
+                )).fetchone()
+                if res:
+                    msg = "[AutoMigrate] Dropping legacy password_hash column..."
+                    print(msg)
+                    logs.append(msg)
+                    conn.execute(text("ALTER TABLE users DROP COLUMN IF EXISTS password_hash;"))
+                    logs.append("[AutoMigrate] password_hash column dropped.")
+
+            # 3. users table: add created_at & updated_at if missing
+            with engine.begin() as conn:
+                for col in ["created_at", "updated_at"]:
+                    col_res = conn.execute(text(
+                        f"SELECT column_name FROM information_schema.columns "
+                        f"WHERE table_name = 'users' AND column_name = '{col}';"
+                    )).fetchone()
+                    if not col_res:
+                        conn.execute(text(
+                            f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;"
+                        ))
+                        logs.append(f"[AutoMigrate] Added {col} to users table.")
+
+            # 4. users.device_token: create partial unique index (ignores NULLs)
+            with engine.begin() as conn:
+                idx = conn.execute(text(
+                    "SELECT indexname FROM pg_indexes "
+                    "WHERE tablename = 'users' AND indexname = 'idx_users_device_token';"
+                )).fetchone()
+                if not idx:
+                    msg = "[AutoMigrate] Creating unique index on users.device_token..."
+                    print(msg)
+                    logs.append(msg)
+                    conn.execute(text(
+                        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_device_token "
+                        "ON users(device_token) WHERE device_token IS NOT NULL;"
+                    ))
+                    logs.append("[AutoMigrate] Index idx_users_device_token created.")
+
+            # 5. products / carts / orders: id INTEGER -> VARCHAR(255)
             with engine.begin() as conn:
                 for table in ["products", "carts", "orders"]:
                     check_query = text(
@@ -24,15 +87,23 @@ def auto_migrate_schema():
                     )
                     res = conn.execute(check_query, {"t": table}).fetchone()
                     if res and res[0] in ("integer", "smallint", "bigint"):
-                        print(f"[AutoMigrate] Converting {table}.id from {res[0]} to VARCHAR(255)...")
-                        conn.execute(text(f"ALTER TABLE {table} ALTER COLUMN id TYPE VARCHAR(255) USING id::VARCHAR;"))
+                        msg = f"[AutoMigrate] Converting {table}.id from {res[0]} to VARCHAR(255)..."
+                        print(msg)
+                        logs.append(msg)
+                        conn.execute(text(
+                            f"ALTER TABLE {table} ALTER COLUMN id TYPE VARCHAR(255) USING id::VARCHAR;"
+                        ))
                         try:
                             conn.execute(text(f"ALTER TABLE {table} ALTER COLUMN id DROP DEFAULT;"))
                         except Exception:
                             pass
-                        print(f"[AutoMigrate] Successfully converted {table}.id to VARCHAR(255)")
+                        logs.append(f"[AutoMigrate] Successfully converted {table}.id to VARCHAR(255)")
+
         except Exception as e:
-            print(f"[AutoMigrate Error] Failed to auto-migrate PostgreSQL columns: {e}")
+            err = f"[AutoMigrate Error] Failed to auto-migrate PostgreSQL columns: {e}"
+            print(err)
+            logs.append(err)
+    return logs
 
 # Automatically create tables for local development / deployment
 Base.metadata.create_all(bind=engine)
@@ -76,4 +147,11 @@ def root():
 @app.get("/api/health")
 def health_check():
     return {"status": "ok"}
-
+
+@app.get("/api/migrate")
+@app.post("/api/migrate")
+def trigger_migration():
+    """Manual endpoint to invoke schema alignment on live database."""
+    Base.metadata.create_all(bind=engine)
+    logs = auto_migrate_schema()
+    return {"status": "Migration completed", "logs": logs}

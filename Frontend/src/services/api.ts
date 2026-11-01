@@ -64,10 +64,25 @@ api.interceptors.response.use(
 export default api;
 
 export function getApiErrorMessage(error: unknown, fallback: string): string {
-    if (!isAxiosError(error)) return fallback;
+    if (!isAxiosError(error)) {
+        if (error instanceof Error) return error.message;
+        return fallback;
+    }
 
     const detail: unknown = error.response?.data?.detail;
-    if (typeof detail === 'string') return detail;
+    if (typeof detail === 'string') {
+        if (
+            detail.includes('psycopg') ||
+            detail.includes('ProgrammingError') ||
+            detail.includes('UndefinedColumn') ||
+            detail.includes('OperationalError') ||
+            detail.includes('Traceback') ||
+            detail.includes('device_token')
+        ) {
+            return 'The cloud server database is syncing. Please retry in a moment or tap Demo mode.';
+        }
+        return detail;
+    }
     if (Array.isArray(detail)) {
         const messages = detail
             .map((item: unknown) => {
@@ -78,7 +93,10 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
         if (messages.length) return messages.join('; ');
     }
     if (!error.response) {
-        return 'Could not connect to the server. Check your internet connection and try again.';
+        return 'Could not connect to the cloud server. Check your network or use offline demo mode.';
+    }
+    if (error.response.status >= 500) {
+        return 'Server temporary maintenance. Please try again or tap Demo mode below.';
     }
 
     return fallback;

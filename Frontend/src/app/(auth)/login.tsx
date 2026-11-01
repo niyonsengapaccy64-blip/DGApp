@@ -19,7 +19,6 @@ import Input from '../../components/Input';
 import Button from '../../components/Button';
 import { Colors } from '../../constants/Colors';
 import { getApiErrorMessage } from '../../services/api';
-
 const AUTH_COLORS = {
     background: '#F3F4F6',
     primary: '#24324A',
@@ -30,12 +29,23 @@ const AUTH_COLORS = {
 
 export default function LoginScreen() {
     const router = useRouter();
-    const { loginWithDevice, rebindDeviceWithLock } = useAuth();
+    const { loginWithDevice, rebindDeviceWithLock, loginAsDemo } = useAuth();
     const { security } = useDeviceAuth();
 
     const [isRebindMode, setIsRebindMode] = useState(false);
     const [rebindEmail, setRebindEmail] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // Fast 1-tap demo mode bypass
+    const handleDemoEnter = async (role: 'user' | 'admin') => {
+        try {
+            setLoading(true);
+            await loginAsDemo(role);
+            router.replace('/(tabs)/tab1');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Primary action: Authenticate with current active phone lock (Biometrics / PIN / Pattern)
     const handleDeviceUnlock = useCallback(async () => {
@@ -201,6 +211,32 @@ export default function LoginScreen() {
                                 </>
                             )}
 
+                            {/* Fast 1-Tap Demo Access Divider & Buttons */}
+                            <View style={styles.demoDividerRow}>
+                                <View style={styles.demoDividerLine} />
+                                <Text style={styles.demoDividerText}>OR 1-TAP DEMO</Text>
+                                <View style={styles.demoDividerLine} />
+                            </View>
+
+                            <View style={styles.demoButtonRow}>
+                                <TouchableOpacity
+                                    style={styles.demoLearnerBtn}
+                                    onPress={() => handleDemoEnter('user')}
+                                    activeOpacity={0.8}
+                                >
+                                    <Ionicons name="school-outline" size={16} color={Colors.primary} />
+                                    <Text style={styles.demoLearnerBtnText}>Learner Demo</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={styles.demoAdminBtn}
+                                    onPress={() => handleDemoEnter('admin')}
+                                    activeOpacity={0.8}
+                                >
+                                    <Ionicons name="shield-outline" size={16} color="#DC2626" />
+                                    <Text style={styles.demoAdminBtnText}>Admin Demo</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
 
                         <View style={styles.footerContainer}>
@@ -426,5 +462,60 @@ const styles = StyleSheet.create({
         borderColor: AUTH_COLORS.border,
         backgroundColor: '#FFFFFF',
         borderRadius: 14,
+    },
+    demoDividerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 14,
+        gap: 8,
+    },
+    demoDividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: AUTH_COLORS.border,
+    },
+    demoDividerText: {
+        fontSize: 10,
+        fontWeight: '800',
+        color: Colors.textMuted,
+        letterSpacing: 1,
+    },
+    demoButtonRow: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+    demoLearnerBtn: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#EEF2FF',
+        borderWidth: 1,
+        borderColor: '#C7D2FE',
+        paddingVertical: 10,
+        borderRadius: 12,
+        gap: 6,
+    },
+    demoLearnerBtnText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: Colors.primary,
+    },
+    demoAdminBtn: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#FEF2F2',
+        borderWidth: 1,
+        borderColor: '#FECACA',
+        paddingVertical: 10,
+        borderRadius: 12,
+        gap: 6,
+    },
+    demoAdminBtnText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#DC2626',
     },
 });
