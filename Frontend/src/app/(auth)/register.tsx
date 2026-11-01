@@ -15,15 +15,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useDeviceAuth } from '../../hooks/useDeviceAuth';
-import FenceLineFrame from '../../components/FenceLineFrame';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 import { Colors } from '../../constants/Colors';
 import { getApiErrorMessage } from '../../services/api';
 
+const AUTH_COLORS = {
+    background: '#F3F4F6',
+    primary: '#24324A',
+    accent: '#C76B4A',
+    accentLight: '#FCEFE9',
+    border: '#E4E7EC',
+};
+
 export default function RegisterScreen() {
     const router = useRouter();
-    const { registerWithDevice, loginAsDemo } = useAuth();
+    const { registerWithDevice } = useAuth();
     const { security } = useDeviceAuth();
 
     const [email, setEmail] = useState('');
@@ -63,20 +70,8 @@ export default function RegisterScreen() {
         }
     };
 
-    const handleQuickDemo = async () => {
-        try {
-            setLoading(true);
-            await loginAsDemo('user');
-            router.replace('/(tabs)/tab1');
-        } catch (e) {
-            Alert.alert('Error', 'Could not start demo session.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
     return (
-        <FenceLineFrame color={Colors.primary}>
+        <View style={styles.page}>
             <SafeAreaView style={styles.safeContainer} edges={['top', 'left', 'right', 'bottom']}>
                 <KeyboardAvoidingView
                     style={styles.keyboardContainer}
@@ -90,8 +85,8 @@ export default function RegisterScreen() {
                         {/* Security Badge */}
                         <View style={styles.securityHeader}>
                             <View style={styles.securityBadge}>
-                                <Ionicons name="key" size={13} color={Colors.primary} />
-                                <Text style={styles.securityBadgeText}>PASSWORDLESS BIOMETRIC ENROLLMENT</Text>
+                                <Ionicons name="shield-checkmark" size={13} color={AUTH_COLORS.accent} />
+                                <Text style={styles.securityBadgeText}>CREATE YOUR ACCOUNT</Text>
                             </View>
                         </View>
 
@@ -104,18 +99,15 @@ export default function RegisterScreen() {
                                     resizeMode="cover"
                                 />
                             </View>
-                            <Text style={styles.brandTitle}>Join DG NOVA</Text>
-                            <Text style={styles.brandTagline}>Learn • Explore • Grow</Text>
-                            <Text style={styles.brandSub}>Hardware-backed device lock registration</Text>
+                            <Text style={styles.brandTitle}>DG NOVA</Text>
+                            <Text style={styles.brandTagline}>Shop, learn, and grow</Text>
+                            <Text style={styles.brandSub}>Your marketplace and academy</Text>
                         </View>
 
-                        {/* Fenced Card Container */}
-                        <View style={styles.fencedCard}>
-                            <View style={styles.cardFenceTop} />
-
-                            <Text style={styles.cardTitle}>Create Your Account</Text>
+                        <View style={styles.registerCard}>
+                            <Text style={styles.cardTitle}>Register</Text>
                             <Text style={styles.cardSubtitle}>
-                                Enter your email below. Your device lock will authenticate and secure your account.
+                                Add your email, then confirm with your phone's screen lock.
                             </Text>
 
                             <Text style={styles.fieldLabel}>Email Address</Text>
@@ -126,18 +118,8 @@ export default function RegisterScreen() {
                                 autoCapitalize="none"
                                 autoCorrect={false}
                                 keyboardType="email-address"
+                                style={styles.input}
                             />
-
-                            <View style={styles.featureBox}>
-                                <View style={styles.featureRow}>
-                                    <Ionicons name="checkmark-circle" size={16} color={Colors.accent} />
-                                    <Text style={styles.featureText}>No passwords to memorize or lose</Text>
-                                </View>
-                                <View style={styles.featureRow}>
-                                    <Ionicons name="checkmark-circle" size={16} color={Colors.accent} />
-                                    <Text style={styles.featureText}>Protected by your phone's biometric chip</Text>
-                                </View>
-                            </View>
 
                             {security.warningMessage && (
                                 <View style={styles.warningBox}>
@@ -147,23 +129,12 @@ export default function RegisterScreen() {
                             )}
 
                             <Button
-                                title={loading ? 'Confirming Phone Lock...' : 'Confirm Phone Lock & Register'}
+                                title={loading ? 'Registering...' : 'Register'}
                                 onPress={handleRegister}
                                 loading={loading}
                                 style={styles.registerBtn}
                             />
 
-                            <TouchableOpacity
-                                style={styles.quickDemoBtn}
-                                onPress={handleQuickDemo}
-                                activeOpacity={0.8}
-                                disabled={loading}
-                            >
-                                <Ionicons name="flash-outline" size={16} color={Colors.secondary} />
-                                <Text style={styles.quickDemoText}>Skip Setup & Enter as Demo Learner</Text>
-                            </TouchableOpacity>
-
-                            <View style={styles.cardFenceBottom} />
                         </View>
 
                         {/* Footer Switch */}
@@ -180,11 +151,15 @@ export default function RegisterScreen() {
                     </ScrollView>
                 </KeyboardAvoidingView>
             </SafeAreaView>
-        </FenceLineFrame>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
+    page: {
+        flex: 1,
+        backgroundColor: AUTH_COLORS.background,
+    },
     safeContainer: {
         flex: 1,
     },
@@ -204,18 +179,18 @@ const styles = StyleSheet.create({
     securityBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: Colors.primaryLight,
+        backgroundColor: AUTH_COLORS.accentLight,
         paddingHorizontal: 12,
         paddingVertical: 4,
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: 'rgba(2, 132, 199, 0.3)',
+        borderColor: '#F1D5C9',
         gap: 6,
     },
     securityBadgeText: {
         fontSize: 9,
         fontWeight: '800',
-        color: Colors.primaryDark,
+        color: AUTH_COLORS.accent,
         letterSpacing: 1.2,
     },
     brandContainer: {
@@ -230,14 +205,14 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 10,
-        shadowColor: Colors.primary,
+        shadowColor: AUTH_COLORS.primary,
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.2,
         shadowRadius: 10,
         elevation: 4,
         overflow: 'hidden',
         borderWidth: 2,
-        borderColor: Colors.border,
+        borderColor: AUTH_COLORS.border,
     },
     logoImage: {
         width: '100%',
@@ -246,13 +221,13 @@ const styles = StyleSheet.create({
     brandTitle: {
         fontSize: 22,
         fontWeight: '900',
-        color: Colors.text,
+        color: AUTH_COLORS.primary,
         letterSpacing: 1,
     },
     brandTagline: {
         fontSize: 12,
         fontWeight: '800',
-        color: Colors.primary,
+        color: AUTH_COLORS.accent,
         letterSpacing: 1.5,
         marginTop: 2,
         textTransform: 'uppercase',
@@ -263,40 +238,22 @@ const styles = StyleSheet.create({
         color: Colors.textMuted,
         marginTop: 3,
     },
-    fencedCard: {
-        backgroundColor: Colors.card,
+    registerCard: {
+        backgroundColor: '#FFFFFF',
         borderRadius: 24,
         padding: 22,
         borderWidth: 1,
-        borderColor: Colors.border,
+        borderColor: AUTH_COLORS.border,
         shadowColor: '#000000',
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.08,
         shadowRadius: 20,
         elevation: 4,
-        position: 'relative',
-        overflow: 'hidden',
-    },
-    cardFenceTop: {
-        height: 3,
-        backgroundColor: Colors.primary,
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-    },
-    cardFenceBottom: {
-        height: 3,
-        backgroundColor: Colors.secondary,
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
     },
     cardTitle: {
         fontSize: 18,
         fontWeight: '800',
-        color: Colors.text,
+        color: AUTH_COLORS.primary,
         marginBottom: 4,
     },
     cardSubtitle: {
@@ -310,23 +267,6 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: Colors.text,
         marginBottom: 6,
-    },
-    featureBox: {
-        backgroundColor: Colors.cardMuted,
-        borderRadius: 14,
-        padding: 12,
-        marginVertical: 12,
-        gap: 8,
-    },
-    featureRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    featureText: {
-        fontSize: 12,
-        color: Colors.text,
-        fontWeight: '500',
     },
     warningBox: {
         flexDirection: 'row',
@@ -348,22 +288,8 @@ const styles = StyleSheet.create({
     registerBtn: {
         marginTop: 4,
         marginBottom: 10,
-    },
-    quickDemoBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: Colors.secondaryLight,
-        paddingVertical: 11,
-        borderRadius: 12,
-        gap: 6,
-        borderWidth: 1,
-        borderColor: 'rgba(99, 102, 241, 0.25)',
-    },
-    quickDemoText: {
-        fontSize: 12,
-        fontWeight: '700',
-        color: Colors.secondaryDark,
+        backgroundColor: AUTH_COLORS.accent,
+        borderRadius: 14,
     },
     footerContainer: {
         flexDirection: 'row',
@@ -378,6 +304,11 @@ const styles = StyleSheet.create({
     footerLink: {
         fontSize: 13,
         fontWeight: '800',
-        color: Colors.primary,
+        color: AUTH_COLORS.accent,
+    },
+    input: {
+        borderColor: AUTH_COLORS.border,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 14,
     },
 });

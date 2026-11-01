@@ -18,68 +18,12 @@ import ProductCard from '../../components/ProductCard';
 import { Colors } from '../../constants/Colors';
 import { useLanguage } from '../../context/LanguageContext';
 import { formatRWF } from '../../constants/i18n';
+import { getApiErrorMessage } from '../../services/api';
 
 const CATEGORIES = ['All', 'Clothes', 'Shoes', 'Bags', 'Household', 'Jewelry', 'Cosmetics'];
 const POLL_INTERVAL_MS = 6000;
 
-const FALLBACK_PRODUCTS = [
-    {
-        id: 1,
-        name: 'Kigali Executive Trench Coat',
-        category: 'Clothes',
-        price: 48000,
-        quantity: 12,
-        images: ['https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800'],
-        description: 'Premium tailored waterproof trench coat designed for Rwandan professionals. Elegant double-breasted cut with inner pockets.',
-    },
-    {
-        id: 2,
-        name: 'Handcrafted Rwandan Leather Loafers',
-        category: 'Shoes',
-        price: 55000,
-        quantity: 8,
-        images: ['https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=800'],
-        description: 'Artisan full-grain leather loafers made in Gatsibo. Cushioned insole for all-day comfort and long-lasting durability.',
-    },
-    {
-        id: 3,
-        name: 'Modern Agaseke Weaved Leather Tote',
-        category: 'Bags',
-        price: 38000,
-        quantity: 15,
-        images: ['https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800'],
-        description: 'Contemporary tote bag combining traditional Rwandan Agaseke geometric weaving patterns with luxury supple leather.',
-    },
-    {
-        id: 4,
-        name: 'Imigongo Artisan Ceramic Coffee Set',
-        category: 'Household',
-        price: 32000,
-        quantity: 10,
-        images: ['https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800'],
-        description: 'Set of 6 handcrafted ceramic cups and pour-over kettle featuring iconic Rwandan Imigongo spiral art.',
-    },
-    {
-        id: 5,
-        name: 'Gisagara Brass & Malachite Cuff',
-        category: 'Jewelry',
-        price: 22000,
-        quantity: 20,
-        images: ['https://images.unsplash.com/photo-1611591475155-42646274494c?w=800'],
-        description: 'Hand-hammered solid brass cuff bracelet inlaid with polished green malachite stone from East Africa.',
-    },
-    {
-        id: 6,
-        name: 'Pure Nyungwe Botanicals Glow Serum',
-        category: 'Cosmetics',
-        price: 18000,
-        quantity: 25,
-        images: ['https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=800'],
-        description: 'Organic cold-pressed facial serum enriched with Moringa and wild botanical extracts from the Nyungwe rainforest.',
-    },
-];
-
-let cachedProducts: any[] = FALLBACK_PRODUCTS;
+let cachedProducts: any[] = [];
 let cachedPendingOrders: any[] = [];
 
 export default function CustomerHome() {
@@ -87,6 +31,7 @@ export default function CustomerHome() {
     const { token } = useAuth();
     const { t, lang } = useLanguage();
     const [products, setProducts] = useState<any[]>(cachedProducts);
+    const [productsError, setProductsError] = useState<string | null>(null);
     const [pendingOrders, setPendingOrders] = useState<any[]>(cachedPendingOrders);
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [loading, setLoading] = useState(false);
@@ -103,26 +48,24 @@ export default function CustomerHome() {
     const fetchData = useCallback(async (silent = false) => {
         try {
             if (!silent && products.length === 0) setLoading(true);
-            const productsPromise = api.get('/products/').catch(() => ({ data: [] }));
+            const productsPromise = api.get('/products/');
             const ordersPromise = token
                 ? api.get('/orders/').catch(() => ({ data: [] }))
                 : Promise.resolve({ data: [] });
 
             const [productsRes, ordersRes] = await Promise.all([productsPromise, ordersPromise]);
 
-            const liveProducts = productsRes.data || [];
-            const finalProducts = liveProducts.length > 0 ? liveProducts : FALLBACK_PRODUCTS;
-            cachedProducts = finalProducts;
-            setProducts(finalProducts);
+            const liveProducts = Array.isArray(productsRes.data) ? productsRes.data : [];
+            cachedProducts = liveProducts;
+            setProducts(liveProducts);
+            setProductsError(null);
 
             const allOrders: any[] = ordersRes.data || [];
             const pending = allOrders.filter((o) => !o.delivered);
             cachedPendingOrders = pending;
             setPendingOrders(pending);
-        } catch {
-            if (products.length === 0) {
-                setProducts(FALLBACK_PRODUCTS);
-            }
+        } catch (error) {
+            setProductsError(getApiErrorMessage(error, 'Could not load products. Pull down to try again.'));
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -130,7 +73,7 @@ export default function CustomerHome() {
     }, [token, products.length]);
 
     useEffect(() => {
-        fetchData(true);
+        fetchData();
 
         if (token) {
             pollRef.current = setInterval(() => {
@@ -334,14 +277,22 @@ export default function CustomerHome() {
                     <View style={styles.emptyContainer}>
                         <Ionicons name="basket-outline" size={48} color={Colors.border} style={{ marginBottom: 10 }} />
                         <Text style={styles.emptyText}>
-                            {lang === 'rw'
+                            {productsError
+                                ? (lang === 'rw'
+                                    ? 'Ibicuruzwa ntibishoboye gufunguka.'
+                                    : lang === 'fr'
+                                    ? 'Impossible de charger les produits.'
+                                    : 'Could not load products.')
+                                : lang === 'rw'
                                 ? `Nta bicuruzwa muri "${selectedCategory}".`
                                 : lang === 'fr'
                                 ? `Aucun produit dans "${selectedCategory}".`
                                 : `No products found in "${selectedCategory}".`}
                         </Text>
                         <Text style={styles.emptySubtext}>
-                            {lang === 'rw'
+                            {productsError
+                                ? productsError
+                                : lang === 'rw'
                                 ? 'Hitamo icyiciro cindi cyangwa gukurura hasi.'
                                 : lang === 'fr'
                                 ? 'Choisissez une autre catégorie ou faites glisser vers le bas.'

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     View,
     Text,
@@ -9,7 +9,6 @@ import {
     Dimensions,
     Pressable,
     Platform,
-    Alert,
 } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,7 +17,6 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Language } from '../constants/i18n';
-import DevInfoModal from './DevInfoModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const DRAWER_WIDTH = Math.min(SCREEN_WIDTH * 0.85, 360);
@@ -26,7 +24,6 @@ const DRAWER_WIDTH = Math.min(SCREEN_WIDTH * 0.85, 360);
 interface NavItem {
     key: string;
     title: string;
-    subtitle: string;
     icon: keyof typeof Ionicons.glyphMap;
     activeIcon: keyof typeof Ionicons.glyphMap;
     route: string;
@@ -60,44 +57,37 @@ export default function HamburgerMenuModal({
 }) {
     const router = useRouter();
     const pathname = usePathname();
-    const { user, logout, loginAsDemo } = useAuth();
+    const { user, logout } = useAuth();
     const { cartCount } = useCart();
     const { lang, setLang } = useLanguage();
-    const [showDevModal, setShowDevModal] = useState(false);
 
     const isAdmin = user?.role === 'admin' || user?.is_admin === true;
 
     const navItems: NavItem[] = [
         {
             key: 'courses',
-            title: 'Course Catalogue',
-            subtitle: 'Browse, details & add course',
+            title: 'Academy',
             icon: 'school-outline',
             activeIcon: 'school',
             route: '/(tabs)/courses',
-            badge: 'Featured',
-            badgeColor: Colors.accent,
         },
         {
             key: 'tab1',
-            title: isAdmin ? 'Admin Dashboard' : 'Home Market',
-            subtitle: isAdmin ? 'Store metrics & overview' : 'Explore featured feed',
+            title: isAdmin ? 'Dashboard' : 'Home',
             icon: isAdmin ? 'grid-outline' : 'home-outline',
             activeIcon: isAdmin ? 'grid' : 'home',
             route: '/(tabs)/tab1',
         },
         {
             key: 'tab2',
-            title: isAdmin ? 'Products Manager' : 'Search & Filter',
-            subtitle: isAdmin ? 'Inventory management CRUD' : 'Filter by category & RWF price',
+            title: isAdmin ? 'Products' : 'Search',
             icon: isAdmin ? 'cube-outline' : 'search-outline',
             activeIcon: isAdmin ? 'cube' : 'search',
             route: '/(tabs)/tab2',
         },
         {
             key: 'tab3',
-            title: isAdmin ? 'Delivery Handshakes' : 'Shopping Cart',
-            subtitle: isAdmin ? 'Live delivery confirmations' : 'Review & checkout items',
+            title: isAdmin ? 'Deliveries' : 'Cart',
             icon: isAdmin ? 'checkmark-done-circle-outline' : 'cart-outline',
             activeIcon: isAdmin ? 'checkmark-done-circle' : 'cart',
             route: '/(tabs)/tab3',
@@ -106,16 +96,14 @@ export default function HamburgerMenuModal({
         },
         {
             key: 'tab4',
-            title: isAdmin ? 'Financial Reports' : 'My Orders',
-            subtitle: isAdmin ? 'Sales KPIs & summaries' : 'Real-time order tracker',
+            title: isAdmin ? 'Reports' : 'Orders',
             icon: isAdmin ? 'bar-chart-outline' : 'receipt-outline',
             activeIcon: isAdmin ? 'bar-chart' : 'receipt',
             route: '/(tabs)/tab4',
         },
         {
             key: 'profile',
-            title: 'Profile & Settings',
-            subtitle: 'Account & language preferences',
+            title: 'Profile',
             icon: 'person-outline',
             activeIcon: 'person',
             route: '/(tabs)/profile',
@@ -127,17 +115,6 @@ export default function HamburgerMenuModal({
         setTimeout(() => {
             router.push(route as any);
         }, 120);
-    };
-
-    const handleSwitchRole = async () => {
-        const nextRole = isAdmin ? 'user' : 'admin';
-        await loginAsDemo(nextRole);
-        Alert.alert(
-            'Role Switched! ⚡',
-            `You are now viewing the app as ${nextRole === 'admin' ? 'Store Administrator' : 'Learner / Customer'}. Tabs and permissions updated.`
-        );
-        onClose();
-        router.replace('/(tabs)/tab1');
     };
 
     const handleLogout = async () => {
@@ -172,16 +149,16 @@ export default function HamburgerMenuModal({
                                         <View
                                             style={[
                                                 styles.roleBadge,
-                                                { backgroundColor: isAdmin ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)' },
+                                                { backgroundColor: isAdmin ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.12)' },
                                             ]}
                                         >
                                             <Text
                                                 style={[
                                                     styles.roleBadgeText,
-                                                    { color: isAdmin ? '#F87171' : Colors.accent },
+                                                    { color: isAdmin ? '#F87171' : '#E2E8F0' },
                                                 ]}
                                             >
-                                                {isAdmin ? 'ADMINISTRATOR' : 'LEARNER / BUYER'}
+                                                {isAdmin ? 'ADMIN' : 'ACCOUNT'}
                                             </Text>
                                         </View>
                                     </View>
@@ -200,17 +177,11 @@ export default function HamburgerMenuModal({
                             </TouchableOpacity>
                         </View>
 
-                        {/* MOTIVATIONAL BANNER */}
-                        <View style={styles.mottoCard}>
-                            <Text style={styles.mottoText}>Learn • Explore • Grow</Text>
-                            <Text style={styles.mottoSub}>DG NOVA Unified Platform</Text>
-                        </View>
-
                         <ScrollView
                             showsVerticalScrollIndicator={false}
                             contentContainerStyle={styles.drawerContent}
                         >
-                            <Text style={styles.sectionHeading}>ALL NAVIGATION TABS</Text>
+                            <Text style={styles.sectionHeading}>MENU</Text>
 
                             {/* NAVIGATION ITEMS */}
                             {navItems.map((item) => {
@@ -235,28 +206,25 @@ export default function HamburgerMenuModal({
                                             />
                                         </View>
 
-                                        <View style={{ flex: 1 }}>
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                                <Text
+                                        <View style={styles.navTitleContainer}>
+                                            <Text
+                                                style={[
+                                                    styles.navTitle,
+                                                    isActive && styles.navTitleActive,
+                                                ]}
+                                            >
+                                                {item.title}
+                                            </Text>
+                                            {item.badge && (
+                                                <View
                                                     style={[
-                                                        styles.navTitle,
-                                                        isActive && styles.navTitleActive,
+                                                        styles.navBadge,
+                                                        { backgroundColor: item.badgeColor || Colors.primary },
                                                     ]}
                                                 >
-                                                    {item.title}
-                                                </Text>
-                                                {item.badge && (
-                                                    <View
-                                                        style={[
-                                                            styles.navBadge,
-                                                            { backgroundColor: item.badgeColor || Colors.primary },
-                                                        ]}
-                                                    >
-                                                        <Text style={styles.navBadgeText}>{item.badge}</Text>
-                                                    </View>
-                                                )}
-                                            </View>
-                                            <Text style={styles.navSubtitle}>{item.subtitle}</Text>
+                                                    <Text style={styles.navBadgeText}>{item.badge}</Text>
+                                                </View>
+                                            )}
                                         </View>
 
                                         <Ionicons
@@ -308,38 +276,6 @@ export default function HamburgerMenuModal({
                                 </View>
                             </View>
 
-                            {/* QUICK ROLE SWITCHER FOR EVALUATION */}
-                            <TouchableOpacity
-                                style={styles.roleSwitchBtn}
-                                onPress={handleSwitchRole}
-                                activeOpacity={0.8}
-                            >
-                                <Ionicons
-                                    name="swap-horizontal"
-                                    size={18}
-                                    color={Colors.secondary}
-                                />
-                                <View style={{ flex: 1, marginLeft: 8 }}>
-                                    <Text style={styles.roleSwitchTitle}>
-                                        Switch to {isAdmin ? 'Learner / Customer' : 'Store Admin'} Mode
-                                    </Text>
-                                    <Text style={styles.roleSwitchSub}>Instant 1-tap testing</Text>
-                                </View>
-                            </TouchableOpacity>
-
-                            {/* SYSTEM DIAGNOSTICS */}
-                            <TouchableOpacity
-                                style={styles.devInfoBtn}
-                                onPress={() => {
-                                    onClose();
-                                    setTimeout(() => setShowDevModal(true), 200);
-                                }}
-                                activeOpacity={0.8}
-                            >
-                                <Ionicons name="hardware-chip-outline" size={18} color={Colors.textMuted} />
-                                <Text style={styles.devInfoText}>Developer & Academic Specs</Text>
-                            </TouchableOpacity>
-
                             {/* LOGOUT */}
                             <TouchableOpacity
                                 style={styles.logoutBtn}
@@ -347,15 +283,13 @@ export default function HamburgerMenuModal({
                                 activeOpacity={0.8}
                             >
                                 <Ionicons name="log-out-outline" size={18} color={Colors.error} />
-                                <Text style={styles.logoutText}>Sign Out / Change Account</Text>
+                                <Text style={styles.logoutText}>Sign out</Text>
                             </TouchableOpacity>
                         </ScrollView>
                     </View>
                 </View>
             </Modal>
 
-            {/* DEV INFO MODAL */}
-            <DevInfoModal visible={showDevModal} onClose={() => setShowDevModal(false)} />
         </>
     );
 }
@@ -456,29 +390,6 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
     },
-    mottoCard: {
-        backgroundColor: 'rgba(2, 132, 199, 0.12)',
-        marginHorizontal: 16,
-        marginTop: 12,
-        marginBottom: 10,
-        borderRadius: 14,
-        padding: 10,
-        borderWidth: 1,
-        borderColor: 'rgba(2, 132, 199, 0.25)',
-        alignItems: 'center',
-    },
-    mottoText: {
-        fontSize: 11,
-        fontWeight: '800',
-        color: Colors.accent,
-        letterSpacing: 2,
-        textTransform: 'uppercase',
-    },
-    mottoSub: {
-        fontSize: 10,
-        color: '#94A3B8',
-        marginTop: 2,
-    },
     drawerContent: {
         paddingHorizontal: 16,
         paddingTop: 8,
@@ -528,10 +439,11 @@ const styles = StyleSheet.create({
         color: '#38BDF8',
         fontWeight: '800',
     },
-    navSubtitle: {
-        fontSize: 10,
-        color: '#94A3B8',
-        marginTop: 1,
+    navTitleContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
     },
     navBadge: {
         paddingHorizontal: 6,
@@ -584,40 +496,6 @@ const styles = StyleSheet.create({
     langPillTextActive: {
         color: '#FFFFFF',
         fontWeight: '800',
-    },
-    roleSwitchBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(99, 102, 241, 0.12)',
-        borderWidth: 1,
-        borderColor: 'rgba(99, 102, 241, 0.3)',
-        borderRadius: 14,
-        padding: 12,
-        marginBottom: 10,
-    },
-    roleSwitchTitle: {
-        fontSize: 12,
-        fontWeight: '700',
-        color: '#C7D2FE',
-    },
-    roleSwitchSub: {
-        fontSize: 10,
-        color: '#A5B4FC',
-    },
-    devInfoBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        paddingVertical: 11,
-        borderRadius: 12,
-        backgroundColor: 'rgba(255, 255, 255, 0.04)',
-        marginBottom: 8,
-    },
-    devInfoText: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#CBD5E1',
     },
     logoutBtn: {
         flexDirection: 'row',

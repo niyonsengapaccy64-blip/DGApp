@@ -1,50 +1,21 @@
 import React, { useState } from 'react';
-import { Platform, View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
-import { useCart } from '../../context/CartContext';
 import HamburgerMenuModal, { HamburgerIcon } from '../../components/HamburgerMenuModal';
 
 export default function TabLayout() {
     const { user } = useAuth();
-    const { cartCount } = useCart();
     const [menuVisible, setMenuVisible] = useState(false);
     const isAdmin = user?.role === 'admin' || user?.is_admin === true;
-    const insets = useSafeAreaInsets();
-
-    const isAndroid = Platform.OS === 'android';
-    const bottomPadding = insets.bottom > 0 ? insets.bottom : (isAndroid ? 10 : 8);
-    const tabHeight = 56 + bottomPadding;
 
     return (
         <View style={styles.container}>
             <Tabs
                 backBehavior="history"
                 screenOptions={{
-                    tabBarActiveTintColor: Colors.primary,
-                    tabBarInactiveTintColor: Colors.textMuted,
-                    tabBarHideOnKeyboard: true,
-                    tabBarStyle: {
-                        backgroundColor: '#FFFFFF',
-                        borderTopColor: Colors.border,
-                        borderTopWidth: 1,
-                        height: tabHeight,
-                        paddingBottom: bottomPadding,
-                        paddingTop: 8,
-                        elevation: 12,
-                        shadowColor: '#000000',
-                        shadowOffset: { width: 0, height: -3 },
-                        shadowOpacity: 0.08,
-                        shadowRadius: 8,
-                    },
-                    tabBarLabelStyle: {
-                        fontSize: 10,
-                        fontWeight: '700',
-                        marginTop: 2,
-                    },
+                    tabBarStyle: { display: 'none' },
                     headerStyle: {
                         backgroundColor: Colors.dark,
                         shadowColor: 'transparent',
@@ -69,88 +40,27 @@ export default function TabLayout() {
             >
                 <Tabs.Screen
                     name="tab1"
-                    options={{
-                        title: isAdmin ? 'Dashboard' : 'Home',
-                        tabBarIcon: ({ color, size }) => (
-                            <Ionicons
-                                name={isAdmin ? 'grid-outline' : 'home-outline'}
-                                size={size}
-                                color={color as string}
-                            />
-                        ),
-                    }}
+                    options={{ title: isAdmin ? 'Dashboard' : 'Home' }}
                 />
                 <Tabs.Screen
                     name="courses"
-                    options={{
-                        title: 'Academy',
-                        tabBarIcon: ({ color, size }) => (
-                            <Ionicons
-                                name="school-outline"
-                                size={size}
-                                color={color as string}
-                            />
-                        ),
-                    }}
+                    options={{ title: 'Academy' }}
                 />
                 <Tabs.Screen
                     name="tab2"
-                    options={{
-                        title: isAdmin ? 'Products' : 'Search',
-                        tabBarIcon: ({ color, size }) => (
-                            <Ionicons
-                                name={isAdmin ? 'cube-outline' : 'search-outline'}
-                                size={size}
-                                color={color as string}
-                            />
-                        ),
-                    }}
+                    options={{ title: isAdmin ? 'Products' : 'Search' }}
                 />
                 <Tabs.Screen
                     name="tab3"
-                    options={{
-                        title: isAdmin ? 'Deliveries' : 'Cart',
-                        tabBarBadge: !isAdmin && cartCount > 0 ? cartCount : undefined,
-                        tabBarBadgeStyle: {
-                            backgroundColor: Colors.error,
-                            color: '#FFFFFF',
-                            fontSize: 10,
-                            fontWeight: '800',
-                        },
-                        tabBarIcon: ({ color, size }) => (
-                            <Ionicons
-                                name={isAdmin ? 'checkmark-done-circle-outline' : 'cart-outline'}
-                                size={size}
-                                color={color as string}
-                            />
-                        ),
-                    }}
+                    options={{ title: isAdmin ? 'Deliveries' : 'Cart' }}
                 />
                 <Tabs.Screen
                     name="tab4"
-                    options={{
-                        title: isAdmin ? 'Reports' : 'Orders',
-                        tabBarIcon: ({ color, size }) => (
-                            <Ionicons
-                                name={isAdmin ? 'bar-chart-outline' : 'receipt-outline'}
-                                size={size}
-                                color={color as string}
-                            />
-                        ),
-                    }}
+                    options={{ title: isAdmin ? 'Reports' : 'Orders' }}
                 />
                 <Tabs.Screen
                     name="profile"
-                    options={{
-                        title: 'Profile',
-                        tabBarIcon: ({ color, size }) => (
-                            <Ionicons
-                                name="person-outline"
-                                size={size}
-                                color={color as string}
-                            />
-                        ),
-                    }}
+                    options={{ title: 'Profile' }}
                 />
                 {/* Root index redirect so /(tabs) routes smoothly to tab1 */}
                 <Tabs.Screen

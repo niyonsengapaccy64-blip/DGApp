@@ -29,7 +29,6 @@ interface AuthContextType {
     rebindDeviceWithLock: (email: string) => Promise<void>;
     logout: () => Promise<void>;
     deleteAccountWithLock: () => Promise<void>;
-    loginAsDemo: (role?: 'admin' | 'user') => Promise<void>;
     // Backward compatibility helpers
     login: (email?: string, pass?: string) => Promise<void>;
     register: (email?: string, pass?: string) => Promise<void>;
@@ -61,21 +60,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
     }, []);
 
-    const loginAsDemo = useCallback(async (role: 'admin' | 'user' = 'user') => {
-        const isAdmin = role === 'admin';
-        const demoUser: AuthUser = {
-            id: isAdmin ? 'demo-admin-01' : 'demo-user-01',
-            email: isAdmin ? 'admin@dgnova.com' : 'learner@dgnova.com',
-            is_admin: isAdmin,
-            role: role,
-        };
-        const demoToken = `demo_jwt_token_${role}_session`;
-        await AsyncStorage.setItem('user_token', demoToken);
-        await cacheOfflineSession(demoToken, demoUser);
-        setToken(demoToken);
-        setUser(demoUser);
-    }, []);
-
     const loadStoredAuth = useCallback(async () => {
         try {
             const storedDevToken = await getStoredDeviceToken();
@@ -84,16 +68,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const storedToken = await AsyncStorage.getItem('user_token');
             if (storedToken) {
                 if (storedToken.startsWith('demo_jwt_token_')) {
-                    const isAdmin = storedToken.includes('admin');
-                    const demoUser: AuthUser = {
-                        id: isAdmin ? 'demo-admin-01' : 'demo-user-01',
-                        email: isAdmin ? 'admin@dgnova.com' : 'learner@dgnova.com',
-                        is_admin: isAdmin,
-                        role: isAdmin ? 'admin' : 'user',
-                    };
-                    setToken(storedToken);
-                    setUser(demoUser);
-                    setIsLoading(false);
+                    await logout();
                     return;
                 }
 
@@ -286,7 +261,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 rebindDeviceWithLock,
                 logout,
                 deleteAccountWithLock,
-                loginAsDemo,
                 login: loginWithDevice,
                 register: (e?: string) => registerWithDevice(e || ''),
                 deleteAccount: deleteAccountWithLock,
