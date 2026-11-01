@@ -110,8 +110,8 @@ export default function RegisterScreen() {
                                 />
                             </View>
                             <Text style={styles.brandTitle}>DG NOVA</Text>
-                            <Text style={styles.brandTagline}>Shop, learn, and grow</Text>
-                            <Text style={styles.brandSub}>Your marketplace and academy</Text>
+                            <Text style={styles.brandTagline}>Quality • Style • Speed</Text>
+                            <Text style={styles.brandSub}>Your premier online retail marketplace</Text>
                         </View>
 
                         <View style={styles.registerCard}>
@@ -152,7 +152,7 @@ export default function RegisterScreen() {
                                 activeOpacity={0.8}
                             >
                                 <Ionicons name="flash-outline" size={15} color={AUTH_COLORS.accent} />
-                                <Text style={styles.demoSkipText}>Skip Setup & Enter as Demo Learner</Text>
+                                <Text style={styles.demoSkipText}>Skip Setup & Enter as Demo Customer</Text>
                             </TouchableOpacity>
 
                         </View>

@@ -65,13 +65,6 @@ export default function HamburgerMenuModal({
 
     const navItems: NavItem[] = [
         {
-            key: 'courses',
-            title: 'Academy',
-            icon: 'school-outline',
-            activeIcon: 'school',
-            route: '/(tabs)/courses',
-        },
-        {
             key: 'tab1',
             title: isAdmin ? 'Dashboard' : 'Home',
             icon: isAdmin ? 'grid-outline' : 'home-outline',

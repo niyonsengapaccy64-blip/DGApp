@@ -30,8 +30,8 @@ function SplashScreen() {
                     <Text style={styles.brandBadgeText}>NEXT GEN PLATFORM</Text>
                 </View>
                 <Text style={styles.splashBrand}>DG NOVA</Text>
-                <Text style={styles.splashTagline}>Learn • Explore • Grow</Text>
-                <Text style={styles.splashSubtext}>E-Marketplace & Course Academy</Text>
+                <Text style={styles.splashTagline}>Premium Retail Experience</Text>
+                <Text style={styles.splashSubtext}>Quality Products • Trusted Delivery</Text>
             </View>
 
             <View style={styles.splashFooter}>

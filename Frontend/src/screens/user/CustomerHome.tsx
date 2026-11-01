@@ -191,47 +191,47 @@ export default function CustomerHome() {
                         )}
 
                         {/* ========================================================= */}
-                        {/* HERO BANNER: Exact user requirements & actions */}
+                        {/* STORE HERO BANNER */}
                         {/* ========================================================= */}
-                        <View style={styles.courseHeroBanner}>
+                        <View style={styles.storeHeroBanner}>
                             <View style={styles.heroGlowAccent} />
-                            <View style={styles.courseBadgeRow}>
-                                <View style={styles.courseBadge}>
-                                    <Ionicons name="school" size={14} color={Colors.accent} />
-                                    <Text style={styles.courseBadgeText}>DG ACADEMY & COURSES</Text>
+                            <View style={styles.heroBadgeRow}>
+                                <View style={styles.heroBadge}>
+                                    <Ionicons name="sparkles" size={14} color={Colors.accent} />
+                                    <Text style={styles.heroBadgeText}>DG NOVA MARKETPLACE</Text>
                                 </View>
                                 <View style={styles.liveTagPill}>
-                                    <Text style={styles.liveTagText}>ACTIVE CATALOGUE</Text>
+                                    <Text style={styles.liveTagText}>FEATURED</Text>
                                 </View>
                             </View>
 
-                            <Text style={styles.courseHeroTitle}>Knowledge & Skill Catalogue</Text>
-                            <Text style={styles.courseHeroSubtitle}>
-                                Browse available courses, explore course details, or add a new course to your catalogue.
+                            <Text style={styles.heroBannerTitle}>Quality Fashion & Essentials</Text>
+                            <Text style={styles.heroBannerSubtitle}>
+                                Explore curated fashion, shoes, bags, cosmetics, and household goods with trusted delivery.
                             </Text>
 
-                            <View style={styles.courseButtonRow}>
+                            <View style={styles.heroButtonRow}>
                                 <TouchableOpacity
-                                    style={styles.browseCoursesBtn}
-                                    onPress={() => router.push('/(tabs)/courses')}
+                                    style={styles.browseStoreBtn}
+                                    onPress={() => router.push('/(tabs)/tab2')}
                                     activeOpacity={0.85}
                                 >
-                                    <Ionicons name="compass" size={16} color="#FFFFFF" />
-                                    <Text style={styles.browseCoursesText}>Browse Courses</Text>
+                                    <Ionicons name="search-outline" size={16} color="#FFFFFF" />
+                                    <Text style={styles.browseStoreText}>Explore Catalog</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    style={styles.addCourseBtn}
-                                    onPress={() => router.push({ pathname: '/(tabs)/courses', params: { action: 'add' } })}
+                                    style={styles.cartShortcutBtn}
+                                    onPress={() => router.push('/(tabs)/tab3')}
                                     activeOpacity={0.85}
                                 >
-                                    <Ionicons name="add-circle" size={16} color={Colors.primary} />
-                                    <Text style={styles.addCourseText}>+ Add a Course</Text>
+                                    <Ionicons name="cart-outline" size={16} color={Colors.primary} />
+                                    <Text style={styles.cartShortcutText}>View Cart</Text>
                                 </TouchableOpacity>
                             </View>
 
                             <View style={styles.taglineBox}>
-                                <Text style={styles.taglineText}>Learn • Explore • Grow</Text>
+                                <Text style={styles.taglineText}>Fast Delivery • Verified Quality • Best Prices</Text>
                             </View>
                         </View>
 
@@ -337,22 +337,7 @@ const styles = StyleSheet.create({
     bannerTitle: { fontSize: 13, fontWeight: '800', color: '#065F46' },
     bannerSub: { fontSize: 12, color: '#047857', marginTop: 1 },
 
-    // COURSE HERO BANNER
-    courseHeroBanner: {
-        backgroundColor: Colors.dark,
-        borderRadius: 22,
-        padding: 18,
-        marginBottom: 16,
-        position: 'relative',
-        overflow: 'hidden',
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.1)',
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.2,
-        shadowRadius: 12,
-        elevation: 6,
-    },
+    // STORE HERO BANNER
     heroGlowAccent: {
         position: 'absolute',
         top: -30,
@@ -362,24 +347,32 @@ const styles = StyleSheet.create({
         borderRadius: 65,
         backgroundColor: 'rgba(2, 132, 199, 0.25)',
     },
-    courseBadgeRow: {
+    storeHeroBanner: {
+        backgroundColor: Colors.dark,
+        borderRadius: 20,
+        padding: 18,
+        marginBottom: 16,
+        overflow: 'hidden',
+        position: 'relative',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.08)',
+    },
+    heroBadgeRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 10,
     },
-    courseBadge: {
+    heroBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(16, 185, 129, 0.18)',
-        paddingHorizontal: 9,
-        paddingVertical: 3,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: 'rgba(16, 185, 129, 0.4)',
+        backgroundColor: 'rgba(2, 132, 199, 0.15)',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 20,
         gap: 6,
     },
-    courseBadgeText: {
+    heroBadgeText: {
         fontSize: 10,
         fontWeight: '800',
         color: Colors.accent,
@@ -396,24 +389,24 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#E2E8F0',
     },
-    courseHeroTitle: {
+    heroBannerTitle: {
         fontSize: 20,
         fontWeight: '900',
         color: '#FFFFFF',
         marginBottom: 6,
     },
-    courseHeroSubtitle: {
+    heroBannerSubtitle: {
         fontSize: 13,
         lineHeight: 18,
         color: '#CBD5E1',
         marginBottom: 14,
     },
-    courseButtonRow: {
+    heroButtonRow: {
         flexDirection: 'row',
         gap: 10,
         marginBottom: 12,
     },
-    browseCoursesBtn: {
+    browseStoreBtn: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
@@ -429,12 +422,12 @@ const styles = StyleSheet.create({
         shadowRadius: 6,
         elevation: 3,
     },
-    browseCoursesText: {
+    browseStoreText: {
         color: '#FFFFFF',
         fontSize: 12,
         fontWeight: '800',
     },
-    addCourseBtn: {
+    cartShortcutBtn: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
@@ -447,7 +440,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: Colors.border,
     },
-    addCourseText: {
+    cartShortcutText: {
         color: Colors.primary,
         fontSize: 12,
         fontWeight: '800',
@@ -462,7 +455,7 @@ const styles = StyleSheet.create({
         fontSize: 11,
         fontWeight: '800',
         color: Colors.accent,
-        letterSpacing: 2,
+        letterSpacing: 1.5,
         textTransform: 'uppercase',
     },
 

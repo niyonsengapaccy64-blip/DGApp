@@ -43,10 +43,6 @@ export default function TabLayout() {
                     options={{ title: isAdmin ? 'Dashboard' : 'Home' }}
                 />
                 <Tabs.Screen
-                    name="courses"
-                    options={{ title: 'Academy' }}
-                />
-                <Tabs.Screen
                     name="tab2"
                     options={{ title: isAdmin ? 'Products' : 'Search' }}
                 />

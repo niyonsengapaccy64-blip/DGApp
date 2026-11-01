@@ -127,8 +127,8 @@ export default function LoginScreen() {
                                 />
                             </View>
                             <Text style={styles.brandTitle}>DG NOVA</Text>
-                            <Text style={styles.brandTagline}>Shop, learn, and grow</Text>
-                            <Text style={styles.brandSub}>Your marketplace and academy</Text>
+                            <Text style={styles.brandTagline}>Quality • Style • Speed</Text>
+                            <Text style={styles.brandSub}>Your premier online retail marketplace</Text>
                         </View>
 
                         {/* Sign-in card */}
@@ -224,8 +224,8 @@ export default function LoginScreen() {
                                     onPress={() => handleDemoEnter('user')}
                                     activeOpacity={0.8}
                                 >
-                                    <Ionicons name="school-outline" size={16} color={Colors.primary} />
-                                    <Text style={styles.demoLearnerBtnText}>Learner Demo</Text>
+                                    <Ionicons name="cart-outline" size={16} color={Colors.primary} />
+                                    <Text style={styles.demoLearnerBtnText}>Customer Demo</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity

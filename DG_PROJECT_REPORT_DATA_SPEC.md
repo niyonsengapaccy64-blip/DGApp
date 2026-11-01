@@ -34,7 +34,7 @@
 * Attribution of third-party libraries: React Native, Expo, Axios, React Navigation / Expo Router, Cloudinary CDN, SQLAlchemy, FastAPI.
 
 ### 1.2 Acknowledgement
-* Gratitude to course lecturer for guidance on modern mobile development and RESTful design.
+* Gratitude to project lecturer for guidance on modern mobile development and RESTful design.
 * Recognition of the university environment, classmates for collaborative testing, and family for support.
 
 ### 1.3 Abstract

@@ -44,13 +44,13 @@ export default function DevInfoModal({
 
                     <View style={styles.avatarWrap}>
                         <View style={styles.avatar}>
-                            <Ionicons name="school" size={28} color="#FFFFFF" />
+                            <Ionicons name="cart" size={28} color="#FFFFFF" />
                         </View>
                     </View>
 
                     <Text style={styles.devName}>DG NOVA SYSTEM</Text>
-                    <Text style={styles.devRole}>Next-Gen E-Market & Course Academy</Text>
-                    <Text style={styles.devHandle}>Learn • Explore • Grow</Text>
+                    <Text style={styles.devRole}>Next-Gen E-Commerce Platform</Text>
+                    <Text style={styles.devHandle}>Quality • Speed • Reliability</Text>
 
                     <View style={styles.divider} />
 
@@ -59,7 +59,7 @@ export default function DevInfoModal({
                         <Text style={styles.specItem}>• Framework: React Native 0.88 + React 19</Text>
                         <Text style={styles.specItem}>• Toolchain: Expo SDK 58 (Expo Router v58)</Text>
                         <Text style={styles.specItem}>• Security: Hardware-Backed Device Auth</Text>
-                        <Text style={styles.specItem}>• Features: Courses Catalogue + Store CRUD</Text>
+                        <Text style={styles.specItem}>• Features: Dynamic Catalog + Order Tracking</Text>
                         <Text style={styles.specItem}>• Navigation: Far Top-Right Hamburger Hub</Text>
                     </View>
 
