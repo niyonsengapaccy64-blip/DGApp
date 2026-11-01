@@ -24,8 +24,8 @@ import { getApiErrorMessage } from '../../services/api';
 
 export default function LoginScreen() {
     const router = useRouter();
-    const { loginWithDevice, rebindDeviceWithLock, deviceToken } = useAuth();
-    const { security, refreshSecurity } = useDeviceAuth();
+    const { loginWithDevice, rebindDeviceWithLock, loginAsDemo, deviceToken } = useAuth();
+    const { security } = useDeviceAuth();
 
     const [isRebindMode, setIsRebindMode] = useState(false);
     const [rebindEmail, setRebindEmail] = useState('');
@@ -40,11 +40,10 @@ export default function LoginScreen() {
             router.replace('/(tabs)/tab1');
         } catch (error: any) {
             if (error?.message === 'NO_DEVICE_TOKEN') {
-                // Device not yet registered or storage cleared
                 setIsRebindMode(true);
                 Alert.alert(
                     'No Linked Account',
-                    'This device is not yet linked. Enter your email to claim/rebind this phone, or tap Register below.'
+                    'This device is not yet linked. You can claim/rebind this phone, or tap "Quick Demo Mode" below to explore immediately.'
                 );
             } else {
                 Alert.alert(
@@ -56,26 +55,6 @@ export default function LoginScreen() {
             setLoading(false);
         }
     }, [loginWithDevice, router]);
-
-    // Auto-prompt device lock on initial screen launch if device is already registered
-    useEffect(() => {
-        let isMounted = true;
-        const autoPrompt = async () => {
-            if (!hasAttemptedAutoPrompt && deviceToken) {
-                setHasAttemptedAutoPrompt(true);
-                // Wait slightly for UI mount transition
-                setTimeout(() => {
-                    if (isMounted) {
-                        void handleDeviceUnlock();
-                    }
-                }, 400);
-            }
-        };
-        void autoPrompt();
-        return () => {
-            isMounted = false;
-        };
-    }, [deviceToken, hasAttemptedAutoPrompt, handleDeviceUnlock]);
 
     // Handle account rebind for new phone or cleared cache
     const handleRebind = async () => {
@@ -103,6 +82,18 @@ export default function LoginScreen() {
         }
     };
 
+    const handleDemoLogin = async (role: 'user' | 'admin') => {
+        try {
+            setLoading(true);
+            await loginAsDemo(role);
+            router.replace('/(tabs)/tab1');
+        } catch (e) {
+            Alert.alert('Error', 'Could not start demo session.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <FenceLineFrame color={Colors.primary}>
             <SafeAreaView style={styles.safeContainer} edges={['top', 'left', 'right', 'bottom']}>
@@ -118,25 +109,27 @@ export default function LoginScreen() {
                         {/* Header Security Status Badge */}
                         <View style={styles.securityHeader}>
                             <View style={styles.securityBadge}>
-                                <Ionicons name="shield-checkmark" size={14} color="#10B981" />
-                                <Text style={styles.securityBadgeText}>HARDWARE-ENCRYPTED LOCK</Text>
+                                <Ionicons name="shield-checkmark" size={14} color={Colors.accent} />
+                                <Text style={styles.securityBadgeText}>DG NOVA UNIFIED PLATFORM</Text>
                             </View>
                         </View>
 
                         {/* Branding Header */}
                         <View style={styles.brandContainer}>
-                            <Image
-                                source={require('../../../assets/DGLoGo.jpg')}
-                                style={styles.logoImage}
-                                resizeMode="contain"
-                            />
-                            <Text style={styles.brandTitle}>D&G E-COMMERCE</Text>
-                            <Text style={styles.brandSub}>Device Lock Authentication</Text>
+                            <View style={styles.logoCircleWrapper}>
+                                <Image
+                                    source={require('../../../assets/DGLoGo.jpg')}
+                                    style={styles.logoImage}
+                                    resizeMode="cover"
+                                />
+                            </View>
+                            <Text style={styles.brandTitle}>DG NOVA</Text>
+                            <Text style={styles.brandTagline}>Learn • Explore • Grow</Text>
+                            <Text style={styles.brandSub}>Retail Market & Course Academy</Text>
                         </View>
 
                         {/* Main Vault Auth Card */}
                         <View style={styles.vaultCard}>
-                            {/* Inner fence line accents on card */}
                             <View style={styles.cardFenceTop} />
 
                             {!isRebindMode ? (
@@ -144,13 +137,13 @@ export default function LoginScreen() {
                                     {/* Normal Login: Pure Phone Lock */}
                                     <View style={styles.biometricCircleOuter}>
                                         <View style={styles.biometricCircleInner}>
-                                            <Ionicons name="finger-print" size={54} color={Colors.primary} />
+                                            <Ionicons name="finger-print" size={50} color={Colors.primary} />
                                         </View>
                                     </View>
 
-                                    <Text style={styles.cardTitle}>Unlock with Phone Lock</Text>
+                                    <Text style={styles.cardTitle}>Instant Secure Sign-In</Text>
                                     <Text style={styles.cardSubtitle}>
-                                        Touch sensor, use Face ID, or enter your device PIN/Pattern
+                                        Use Face ID, fingerprint, device PIN, or 1-tap demo testing
                                     </Text>
 
                                     {security.warningMessage && (
@@ -161,11 +154,41 @@ export default function LoginScreen() {
                                     )}
 
                                     <Button
-                                        title={loading ? 'Verifying Lock...' : 'Unlock Account'}
+                                        title={loading ? 'Verifying Lock...' : 'Unlock Account with Phone Lock'}
                                         onPress={handleDeviceUnlock}
                                         loading={loading}
                                         style={styles.unlockBtn}
                                     />
+
+                                    {/* INSTANT DEMO TESTING DIVIDER */}
+                                    <View style={styles.demoDividerRow}>
+                                        <View style={styles.demoDividerLine} />
+                                        <Text style={styles.demoDividerText}>OR 1-TAP DEMO ACCESS</Text>
+                                        <View style={styles.demoDividerLine} />
+                                    </View>
+
+                                    {/* DEMO BUTTONS FOR ZERO-FRICTION EXPO TESTING */}
+                                    <View style={styles.demoButtonsGrid}>
+                                        <TouchableOpacity
+                                            style={styles.demoCustomerBtn}
+                                            onPress={() => handleDemoLogin('user')}
+                                            activeOpacity={0.85}
+                                            disabled={loading}
+                                        >
+                                            <Ionicons name="school-outline" size={18} color="#FFFFFF" />
+                                            <Text style={styles.demoCustomerBtnText}>Explore as Learner / Buyer</Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            style={styles.demoAdminBtn}
+                                            onPress={() => handleDemoLogin('admin')}
+                                            activeOpacity={0.85}
+                                            disabled={loading}
+                                        >
+                                            <Ionicons name="shield-outline" size={18} color={Colors.primary} />
+                                            <Text style={styles.demoAdminBtnText}>Explore as Store Admin</Text>
+                                        </TouchableOpacity>
+                                    </View>
 
                                     {/* Switch to Rebind / New Phone Mode */}
                                     <TouchableOpacity
@@ -224,7 +247,7 @@ export default function LoginScreen() {
 
                         {/* Footer Switch to Register */}
                         <View style={styles.footerContainer}>
-                            <Text style={styles.footerText}>New to D&G? </Text>
+                            <Text style={styles.footerText}>New to DG NOVA? </Text>
                             <TouchableOpacity
                                 onPress={() => router.push('/(auth)/register')}
                                 activeOpacity={0.7}
@@ -250,198 +273,261 @@ const styles = StyleSheet.create({
     scrollContainer: {
         flexGrow: 1,
         justifyContent: 'center',
-        paddingHorizontal: 22,
-        paddingVertical: 24,
+        paddingHorizontal: 20,
+        paddingVertical: 20,
     },
     securityHeader: {
         alignItems: 'center',
-        marginBottom: 12,
+        marginBottom: 10,
     },
     securityBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#ECFDF5',
-        paddingVertical: 4,
+        backgroundColor: 'rgba(16, 185, 129, 0.12)',
         paddingHorizontal: 12,
+        paddingVertical: 4,
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: '#A7F3D0',
+        borderColor: 'rgba(16, 185, 129, 0.3)',
         gap: 6,
     },
     securityBadgeText: {
         fontSize: 10,
         fontWeight: '800',
-        color: '#065F46',
-        letterSpacing: 1.2,
+        color: Colors.accent,
+        letterSpacing: 1.5,
     },
     brandContainer: {
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 16,
     },
-    logoImage: {
-        width: 88,
-        height: 88,
-        borderRadius: 22,
+    logoCircleWrapper: {
+        width: 76,
+        height: 76,
+        borderRadius: 24,
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
         marginBottom: 10,
         shadowColor: Colors.primary,
-        shadowOffset: { width: 0, height: 6 },
+        shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.25,
-        shadowRadius: 10,
+        shadowRadius: 12,
         elevation: 6,
+        overflow: 'hidden',
+        borderWidth: 2,
+        borderColor: Colors.border,
+    },
+    logoImage: {
+        width: '100%',
+        height: '100%',
     },
     brandTitle: {
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: '900',
-        color: '#0F172A',
-        letterSpacing: 1.5,
+        color: Colors.text,
+        letterSpacing: 2,
     },
-    brandSub: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#64748B',
-        marginTop: 3,
-        letterSpacing: 0.8,
+    brandTagline: {
+        fontSize: 13,
+        fontWeight: '800',
+        color: Colors.primary,
+        letterSpacing: 1.5,
+        marginTop: 2,
         textTransform: 'uppercase',
     },
+    brandSub: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: Colors.textMuted,
+        marginTop: 3,
+    },
     vaultCard: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.card,
         borderRadius: 24,
-        paddingVertical: 28,
-        paddingHorizontal: 24,
-        borderWidth: 1.5,
-        borderColor: '#E2E8F0',
-        shadowColor: '#0F172A',
+        padding: 22,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        shadowColor: '#000000',
         shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.08,
         shadowRadius: 20,
-        elevation: 6,
+        elevation: 4,
         position: 'relative',
         overflow: 'hidden',
     },
     cardFenceTop: {
-        position: 'absolute',
-        top: 0,
-        left: 20,
-        right: 20,
         height: 3,
         backgroundColor: Colors.primary,
-        borderRadius: 2,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
     },
     cardFenceBottom: {
+        height: 3,
+        backgroundColor: Colors.secondary,
         position: 'absolute',
         bottom: 0,
-        left: 20,
-        right: 20,
-        height: 3,
-        backgroundColor: '#CBD5E1',
-        borderRadius: 2,
+        left: 0,
+        right: 0,
     },
     biometricCircleOuter: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        backgroundColor: '#EFF6FF',
-        borderWidth: 2,
-        borderColor: '#BFDBFE',
-        justifyContent: 'center',
-        alignItems: 'center',
         alignSelf: 'center',
-        marginBottom: 18,
-    },
-    biometricCircleInner: {
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: '#DBEAFE',
+        backgroundColor: Colors.primaryLight,
         justifyContent: 'center',
         alignItems: 'center',
+        marginBottom: 12,
+    },
+    biometricCircleInner: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: Colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 2,
     },
     rebindIconContainer: {
-        width: 68,
-        height: 68,
-        borderRadius: 34,
-        backgroundColor: '#EFF6FF',
+        alignSelf: 'center',
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: Colors.primaryLight,
         justifyContent: 'center',
         alignItems: 'center',
-        alignSelf: 'center',
-        marginBottom: 16,
-        borderWidth: 1.5,
-        borderColor: '#BFDBFE',
+        marginBottom: 12,
     },
     cardTitle: {
-        fontSize: 22,
+        fontSize: 18,
         fontWeight: '800',
-        color: '#0F172A',
+        color: Colors.text,
         textAlign: 'center',
+        marginBottom: 4,
     },
     cardSubtitle: {
-        fontSize: 13,
-        color: '#64748B',
+        fontSize: 12,
+        color: Colors.textMuted,
         textAlign: 'center',
-        marginTop: 6,
-        marginBottom: 20,
-        lineHeight: 18,
+        marginBottom: 16,
+        lineHeight: 17,
         paddingHorizontal: 8,
-    },
-    fieldLabel: {
-        fontSize: 13,
-        fontWeight: '700',
-        color: '#334155',
-        marginTop: 4,
-        marginBottom: 4,
     },
     warningBox: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#FEF2F2',
         borderWidth: 1,
-        borderColor: '#FECACA',
-        padding: 10,
+        borderColor: '#FCA5A5',
         borderRadius: 10,
-        marginBottom: 16,
-        gap: 8,
+        padding: 8,
+        marginBottom: 12,
+        gap: 6,
     },
     warningText: {
-        fontSize: 12,
-        color: '#B91C1C',
+        fontSize: 11,
+        color: '#DC2626',
+        fontWeight: '600',
         flex: 1,
-        lineHeight: 16,
     },
     unlockBtn: {
+        marginTop: 4,
+        marginBottom: 8,
+    },
+    demoDividerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 14,
+    },
+    demoDividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: Colors.border,
+    },
+    demoDividerText: {
+        fontSize: 10,
+        fontWeight: '800',
+        color: Colors.textLight,
+        letterSpacing: 1.2,
+        paddingHorizontal: 10,
+    },
+    demoButtonsGrid: {
+        gap: 8,
+        marginBottom: 12,
+    },
+    demoCustomerBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: Colors.secondary,
+        paddingVertical: 12,
         borderRadius: 14,
-        marginTop: 8,
-        paddingVertical: 14,
-        shadowColor: Colors.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 4,
+        gap: 8,
+        shadowColor: Colors.secondary,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.25,
+        shadowRadius: 6,
+        elevation: 3,
+    },
+    demoCustomerBtnText: {
+        color: '#FFFFFF',
+        fontSize: 13,
+        fontWeight: '800',
+    },
+    demoAdminBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: Colors.primaryLight,
+        paddingVertical: 11,
+        borderRadius: 14,
+        gap: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(2, 132, 199, 0.3)',
+    },
+    demoAdminBtnText: {
+        color: Colors.primaryDark,
+        fontSize: 13,
+        fontWeight: '800',
     },
     switchModeContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 18,
         gap: 6,
-        paddingVertical: 4,
+        marginTop: 8,
+        paddingVertical: 6,
     },
     switchModeText: {
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: '700',
         color: Colors.primary,
+    },
+    fieldLabel: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: Colors.text,
+        marginBottom: 6,
     },
     footerContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 24,
+        marginTop: 18,
     },
     footerText: {
-        fontSize: 14,
-        color: '#64748B',
+        fontSize: 13,
+        color: Colors.textMuted,
     },
     footerLink: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '800',
         color: Colors.primary,
     },

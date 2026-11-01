@@ -31,7 +31,64 @@ const CATEGORY_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
 // RWF-based price tiers
 const PRICE_FILTERS = ['All Prices', 'Under 50k RWF', '50k-150k RWF', 'Over 150k RWF'];
 
-let cachedSearchProducts: any[] = [];
+const FALLBACK_SEARCH_PRODUCTS = [
+    {
+        id: 1,
+        name: 'Kigali Executive Trench Coat',
+        category: 'Clothes',
+        price: 48000,
+        quantity: 12,
+        images: ['https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800'],
+        description: 'Premium tailored waterproof trench coat designed for Rwandan professionals. Elegant double-breasted cut with inner pockets.',
+    },
+    {
+        id: 2,
+        name: 'Handcrafted Rwandan Leather Loafers',
+        category: 'Shoes',
+        price: 55000,
+        quantity: 8,
+        images: ['https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=800'],
+        description: 'Artisan full-grain leather loafers made in Gatsibo. Cushioned insole for all-day comfort and long-lasting durability.',
+    },
+    {
+        id: 3,
+        name: 'Modern Agaseke Weaved Leather Tote',
+        category: 'Bags',
+        price: 38000,
+        quantity: 15,
+        images: ['https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800'],
+        description: 'Contemporary tote bag combining traditional Rwandan Agaseke geometric weaving patterns with luxury supple leather.',
+    },
+    {
+        id: 4,
+        name: 'Imigongo Artisan Ceramic Coffee Set',
+        category: 'Household',
+        price: 32000,
+        quantity: 10,
+        images: ['https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800'],
+        description: 'Set of 6 handcrafted ceramic cups and pour-over kettle featuring iconic Rwandan Imigongo spiral art.',
+    },
+    {
+        id: 5,
+        name: 'Gisagara Brass & Malachite Cuff',
+        category: 'Jewelry',
+        price: 22000,
+        quantity: 20,
+        images: ['https://images.unsplash.com/photo-1611591475155-42646274494c?w=800'],
+        description: 'Hand-hammered solid brass cuff bracelet inlaid with polished green malachite stone from East Africa.',
+    },
+    {
+        id: 6,
+        name: 'Pure Nyungwe Botanicals Glow Serum',
+        category: 'Cosmetics',
+        price: 18000,
+        quantity: 25,
+        images: ['https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=800'],
+        description: 'Organic cold-pressed facial serum enriched with Moringa and wild botanical extracts from the Nyungwe rainforest.',
+    },
+];
+
+let cachedSearchProducts: any[] = FALLBACK_SEARCH_PRODUCTS;
 
 export default function CustomerSearch() {
     const { t, lang } = useLanguage();
@@ -58,11 +115,11 @@ export default function CustomerSearch() {
         try {
             const url = search.trim() ? `/products/?search=${encodeURIComponent(search.trim())}` : '/products/';
             const res = await api.get(url);
-            const data = res.data || [];
+            const data = res.data && res.data.length > 0 ? res.data : (!search.trim() ? FALLBACK_SEARCH_PRODUCTS : FALLBACK_SEARCH_PRODUCTS.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.category.toLowerCase().includes(search.toLowerCase())));
             if (!search.trim()) cachedSearchProducts = data;
             setProducts(data);
         } catch {
-            // Silently handle fetch error
+            setProducts(!search.trim() ? FALLBACK_SEARCH_PRODUCTS : FALLBACK_SEARCH_PRODUCTS.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.category.toLowerCase().includes(search.toLowerCase())));
         }
     };
 

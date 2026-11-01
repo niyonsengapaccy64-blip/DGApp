@@ -13,12 +13,11 @@ export default function ProductCard({ product }: { product: any }) {
     const imageUrl = validImages[0] || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80';
     const imageCount = validImages.length;
 
-
     return (
         <TouchableOpacity
             style={styles.card}
             onPress={() => router.push(`/product/${product.id}`)}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
         >
             <View style={styles.imageWrapper}>
                 <Image source={{ uri: imageUrl }} style={styles.image} />
@@ -28,14 +27,18 @@ export default function ProductCard({ product }: { product: any }) {
                         <Text style={styles.imageBadgeText}>{imageCount}</Text>
                     </View>
                 )}
+                {product?.category && (
+                    <View style={styles.categoryPill}>
+                        <Text style={styles.categoryPillText}>{product.category}</Text>
+                    </View>
+                )}
             </View>
             <Text style={styles.name} numberOfLines={1}>
                 {product?.name || 'Product'}
             </Text>
             <Text style={styles.price}>{formatRWF(parseFloat(product?.price || 0))}</Text>
-            {/* Show quantity badge only when low stock */}
             {typeof product?.quantity === 'number' && product.quantity <= 5 && product.quantity > 0 && (
-                <Text style={styles.lowStock}>Only {product.quantity} left!</Text>
+                <Text style={styles.lowStock}>Only {product.quantity} left in stock!</Text>
             )}
         </TouchableOpacity>
     );
@@ -45,22 +48,24 @@ const styles = StyleSheet.create({
     card: {
         width: '48%',
         backgroundColor: Colors.card,
-        borderRadius: 12,
+        borderRadius: 16,
         padding: 10,
         marginBottom: 14,
         borderWidth: 1,
         borderColor: Colors.border,
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowRadius: 5,
+        elevation: 3,
+        shadowColor: '#000000',
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 3 },
     },
     imageWrapper: {
         position: 'relative',
         width: '100%',
-        height: 125,
-        borderRadius: 8,
+        height: 130,
+        borderRadius: 12,
         overflow: 'hidden',
+        backgroundColor: Colors.cardMuted,
     },
     image: {
         width: '100%',
@@ -71,34 +76,49 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 6,
         right: 6,
-        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        backgroundColor: 'rgba(11, 17, 32, 0.75)',
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 6,
         paddingVertical: 2,
-        borderRadius: 10,
+        borderRadius: 8,
     },
     imageBadgeText: {
         color: '#FFFFFF',
         fontSize: 10,
         fontWeight: '700',
     },
+    categoryPill: {
+        position: 'absolute',
+        bottom: 6,
+        left: 6,
+        backgroundColor: 'rgba(255, 255, 255, 0.92)',
+        paddingHorizontal: 7,
+        paddingVertical: 2,
+        borderRadius: 6,
+    },
+    categoryPillText: {
+        color: Colors.text,
+        fontSize: 9,
+        fontWeight: '800',
+        textTransform: 'uppercase',
+    },
     name: {
-        fontSize: 14,
-        fontWeight: '600',
+        fontSize: 13.5,
+        fontWeight: '700',
         color: Colors.text,
         marginTop: 8,
     },
     price: {
         fontSize: 15,
-        fontWeight: 'bold',
+        fontWeight: '900',
         color: Colors.primary,
-        marginTop: 4,
+        marginTop: 3,
     },
     lowStock: {
-        fontSize: 11,
+        fontSize: 10.5,
         color: Colors.error,
-        fontWeight: '700',
+        fontWeight: '800',
         marginTop: 2,
     },
 });

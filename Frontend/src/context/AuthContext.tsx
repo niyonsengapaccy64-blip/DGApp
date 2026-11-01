@@ -29,6 +29,7 @@ interface AuthContextType {
     rebindDeviceWithLock: (email: string) => Promise<void>;
     logout: () => Promise<void>;
     deleteAccountWithLock: () => Promise<void>;
+    loginAsDemo: (role?: 'admin' | 'user') => Promise<void>;
     // Backward compatibility helpers
     login: (email?: string, pass?: string) => Promise<void>;
     register: (email?: string, pass?: string) => Promise<void>;
@@ -60,6 +61,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
     }, []);
 
+    const loginAsDemo = useCallback(async (role: 'admin' | 'user' = 'user') => {
+        const isAdmin = role === 'admin';
+        const demoUser: AuthUser = {
+            id: isAdmin ? 'demo-admin-01' : 'demo-user-01',
+            email: isAdmin ? 'admin@dgnova.com' : 'learner@dgnova.com',
+            is_admin: isAdmin,
+            role: role,
+        };
+        const demoToken = `demo_jwt_token_${role}_session`;
+        await AsyncStorage.setItem('user_token', demoToken);
+        await cacheOfflineSession(demoToken, demoUser);
+        setToken(demoToken);
+        setUser(demoUser);
+    }, []);
+
     const loadStoredAuth = useCallback(async () => {
         try {
             const storedDevToken = await getStoredDeviceToken();
@@ -67,6 +83,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             const storedToken = await AsyncStorage.getItem('user_token');
             if (storedToken) {
+                if (storedToken.startsWith('demo_jwt_token_')) {
+                    const isAdmin = storedToken.includes('admin');
+                    const demoUser: AuthUser = {
+                        id: isAdmin ? 'demo-admin-01' : 'demo-user-01',
+                        email: isAdmin ? 'admin@dgnova.com' : 'learner@dgnova.com',
+                        is_admin: isAdmin,
+                        role: isAdmin ? 'admin' : 'user',
+                    };
+                    setToken(storedToken);
+                    setUser(demoUser);
+                    setIsLoading(false);
+                    return;
+                }
+
                 try {
                     const res = await api.get('/users/me');
                     setToken(storedToken);
@@ -75,10 +105,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     await cacheOfflineSession(storedToken, normUser);
                 } catch (netErr: any) {
                     if (netErr?.response?.status === 401) {
-                        // The saved token is explicitly rejected by the server
                         await logout();
                     } else if (!netErr?.response) {
-                        // Offline fallback: ONLY load cached session if truly offline / network unreachable
                         const cached = await getCachedOfflineSession();
                         if (cached && cached.token === storedToken) {
                             setToken(cached.token);
@@ -101,18 +129,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         void loadStoredAuth();
     }, [loadStoredAuth]);
 
-    /**
-     * B. Login / Launch Flow (/login)
-     * Automatically prompts phone lock (PIN/Pattern/Biometrics).
-     * On success, retrieves device_token and calls POST /api/auth/login.
-     */
     const loginWithDevice = async () => {
         const storedToken = await getStoredDeviceToken();
         if (!storedToken) {
             throw new Error('NO_DEVICE_TOKEN');
         }
 
-        // OS Phone Lock Prompt
         const authResult = await promptDeviceAuthentication('Confirm your phone lock to sign in');
         if (!authResult.success) {
             throw new Error(authResult.error || 'Phone lock authentication cancelled or failed.');
@@ -139,7 +161,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             await cacheOfflineSession(accessToken, normUser);
             setDeviceToken(storedToken);
         } catch (error: any) {
-            // Check for offline capability
             if (!error.response) {
                 const cached = await getCachedOfflineSession();
                 if (cached) {
@@ -152,26 +173,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    /**
-     * A. Registration Screen (/register)
-     * Prompts phone lock confirmation.
-     * On success, generates a cryptographically secure random UUID (device_token),
-     * saves it locally in hardware-encrypted SecureStore,
-     * and sends { email, device_token, is_admin: false } to POST /api/auth/register.
-     */
     const registerWithDevice = async (email: string) => {
         const cleanEmail = email.trim().toLowerCase();
         if (!cleanEmail) {
             throw new Error('Please enter a valid email address.');
         }
 
-        // OS Phone Lock Prompt
         const authResult = await promptDeviceAuthentication('Confirm phone lock to create account');
         if (!authResult.success) {
             throw new Error(authResult.error || 'Phone lock authentication was cancelled.');
         }
 
-        // Generate cryptographically secure UUID
         const newDeviceToken = generateDeviceToken();
 
         const res = await api.post('/auth/register', {
@@ -180,7 +192,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             is_admin: false,
         });
 
-        // Save device token in hardware SecureStore
         await saveDeviceToken(newDeviceToken);
         setDeviceToken(newDeviceToken);
 
@@ -205,10 +216,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    /**
-     * Device Recovery / Replacement: Rebind Device
-     * Prompts phone lock, generates new device_token, and calls POST /api/auth/rebind-device.
-     */
     const rebindDeviceWithLock = async (email: string) => {
         const cleanEmail = email.trim().toLowerCase();
         if (!cleanEmail) {
@@ -247,9 +254,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    /**
-     * Delete Account: Uses phone lock instead of password!
-     */
     const deleteAccountWithLock = async () => {
         if (!user) throw new Error('Not authenticated');
 
@@ -282,6 +286,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 rebindDeviceWithLock,
                 logout,
                 deleteAccountWithLock,
+                loginAsDemo,
                 login: loginWithDevice,
                 register: (e?: string) => registerWithDevice(e || ''),
                 deleteAccount: deleteAccountWithLock,

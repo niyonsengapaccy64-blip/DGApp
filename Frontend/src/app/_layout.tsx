@@ -9,25 +9,34 @@ import { View, Image, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Colors } from '../constants/Colors';
 import OfflineNotice from '../components/OfflineNotice';
 
-const SPLASH_DURATION = 1800; // Snappy, modern splash duration
+const SPLASH_DURATION = 1500; // Snappy, ultra-fast launch
 
 function SplashScreen() {
     return (
         <View style={styles.splash}>
+            {/* Cyber Glow Background Accents */}
+            <View style={styles.glowOrbPrimary} />
+            <View style={styles.glowOrbSecondary} />
+
             <View style={styles.splashCenter}>
                 <View style={styles.logoWrapper}>
                     <Image
                         source={require('../../assets/DGLoGo.jpg')}
                         style={styles.splashLogo}
-                        resizeMode="contain"
+                        resizeMode="cover"
                     />
                 </View>
-                <Text style={styles.splashBrand}>D&G E-COMMERCE</Text>
-                <Text style={styles.splashTagline}>Premium Retail & Fast Delivery</Text>
+                <View style={styles.brandBadge}>
+                    <Text style={styles.brandBadgeText}>NEXT GEN PLATFORM</Text>
+                </View>
+                <Text style={styles.splashBrand}>DG NOVA</Text>
+                <Text style={styles.splashTagline}>Learn • Explore • Grow</Text>
+                <Text style={styles.splashSubtext}>E-Marketplace & Course Academy</Text>
             </View>
+
             <View style={styles.splashFooter}>
                 <ActivityIndicator size="small" color={Colors.primary} />
-                <Text style={styles.splashLoadingText}>Loading your experience...</Text>
+                <Text style={styles.splashLoadingText}>Initializing your workspace...</Text>
             </View>
         </View>
     );
@@ -93,60 +102,101 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
     splash: {
         flex: 1,
-        backgroundColor: '#0F172A', // Modern deep midnight obsidian
+        backgroundColor: Colors.dark,
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 24,
+        position: 'relative',
+    },
+    glowOrbPrimary: {
+        position: 'absolute',
+        top: '20%',
+        width: 260,
+        height: 260,
+        borderRadius: 130,
+        backgroundColor: 'rgba(2, 132, 199, 0.18)',
+    },
+    glowOrbSecondary: {
+        position: 'absolute',
+        bottom: '22%',
+        width: 220,
+        height: 220,
+        borderRadius: 110,
+        backgroundColor: 'rgba(99, 102, 241, 0.15)',
     },
     splashCenter: {
         alignItems: 'center',
         justifyContent: 'center',
+        zIndex: 1,
     },
     logoWrapper: {
-        width: 120,
-        height: 120,
-        borderRadius: 30,
-        backgroundColor: '#FFFFFF',
+        width: 104,
+        height: 104,
+        borderRadius: 28,
+        backgroundColor: Colors.card,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: Colors.primary,
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.35,
-        shadowRadius: 20,
-        elevation: 10,
         marginBottom: 20,
-        borderWidth: 2,
-        borderColor: 'rgba(255, 255, 255, 0.15)',
+        shadowColor: Colors.primary,
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.45,
+        shadowRadius: 20,
+        elevation: 16,
         overflow: 'hidden',
+        borderWidth: 2,
+        borderColor: 'rgba(255, 255, 255, 0.25)',
     },
     splashLogo: {
-        width: 110,
-        height: 110,
-        borderRadius: 25,
+        width: '100%',
+        height: '100%',
+    },
+    brandBadge: {
+        backgroundColor: 'rgba(2, 132, 199, 0.15)',
+        borderWidth: 1,
+        borderColor: 'rgba(2, 132, 199, 0.35)',
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 20,
+        marginBottom: 10,
+    },
+    brandBadgeText: {
+        color: Colors.primary,
+        fontSize: 10,
+        fontWeight: '800',
+        letterSpacing: 2,
     },
     splashBrand: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: '900',
         color: '#FFFFFF',
-        letterSpacing: 2,
-        marginBottom: 6,
+        letterSpacing: 3,
+        marginBottom: 8,
     },
     splashTagline: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#94A3B8',
-        letterSpacing: 0.5,
+        fontSize: 15,
+        fontWeight: '700',
+        color: Colors.accent,
+        letterSpacing: 1.5,
+        marginBottom: 6,
+    },
+    splashSubtext: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: Colors.textMuted,
+        letterSpacing: 0.8,
     },
     splashFooter: {
         position: 'absolute',
         bottom: 50,
         alignItems: 'center',
-        gap: 10,
+        zIndex: 1,
     },
     splashLoadingText: {
+        marginTop: 10,
         fontSize: 12,
+        color: Colors.textLight,
         fontWeight: '500',
-        color: '#64748B',
+        letterSpacing: 0.5,
     },
     loader: {
         flex: 1,
