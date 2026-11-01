@@ -1,4 +1,4 @@
-import axios, { isAxiosError } from 'axios';
+import { create, isAxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const getBaseUrl = (): string => {
@@ -13,7 +13,7 @@ if (__DEV__) {
     console.log('[API] Initialized Base URL:', API_BASE_URL);
 }
 
-const api = axios.create({
+const api = create({
     baseURL: API_BASE_URL,
     timeout: 30000,
     headers: {

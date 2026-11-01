@@ -101,7 +101,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, [logout]);
 
     useEffect(() => {
-        void loadStoredAuth();
+        const hydrationTask = setTimeout(() => {
+            void loadStoredAuth();
+        }, 0);
+        return () => clearTimeout(hydrationTask);
     }, [loadStoredAuth]);
 
     const loginWithDevice = async () => {

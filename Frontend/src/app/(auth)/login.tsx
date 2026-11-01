@@ -133,7 +133,7 @@ export default function LoginScreen() {
 
                                     <Text style={styles.cardTitle}>Welcome back</Text>
                                     <Text style={styles.cardSubtitle}>
-                                        Sign in securely with your phone's fingerprint, Face ID, or screen lock.
+                                        Sign in securely with your phone&apos;s fingerprint, Face ID, or screen lock.
                                     </Text>
 
                                     {security.warningMessage && (
@@ -167,7 +167,7 @@ export default function LoginScreen() {
 
                                     <Text style={styles.cardTitle}>Link your account</Text>
                                     <Text style={styles.cardSubtitle}>
-                                        Enter the email on your account, then confirm with your phone's screen lock.
+                                        Enter the email on your account, then confirm with your phone&apos;s screen lock.
                                     </Text>
 
                                     <Text style={styles.fieldLabel}>Account Email</Text>

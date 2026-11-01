@@ -23,7 +23,7 @@ For the complete technical, architectural, and operational documentation, see:
 
 ## Testing authentication and API access
 
-The app uses the deployed API (`https://dgapp.onrender.com/api`) in development and production by default, so you do not need to run the backend locally. Your phone or emulator must have internet access. The first request can take longer if the hosted API is waking up.
+The app uses the deployed API (`https://dgapp-vu9a.onrender.com/api`) in development and production by default, so you do not need to run the backend locally. Your phone or emulator must have internet access. The first request can take longer if the hosted API is waking up.
 
 To use a different API, set `EXPO_PUBLIC_API_URL` before starting Expo. For example, in PowerShell:
 

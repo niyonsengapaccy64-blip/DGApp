@@ -51,7 +51,7 @@ export default function RegisterScreen() {
             setLoading(true);
             await registerWithDevice(trimmedEmail);
             Alert.alert(
-                'Registration Successful! 🎉',
+                'Registration successful',
                 'Your account has been created and bound to this device screen lock.',
                 [
                     {
@@ -107,7 +107,7 @@ export default function RegisterScreen() {
                         <View style={styles.registerCard}>
                             <Text style={styles.cardTitle}>Register</Text>
                             <Text style={styles.cardSubtitle}>
-                                Add your email, then confirm with your phone's screen lock.
+                                Add your email, then confirm with your phone&apos;s screen lock.
                             </Text>
 
                             <Text style={styles.fieldLabel}>Email Address</Text>

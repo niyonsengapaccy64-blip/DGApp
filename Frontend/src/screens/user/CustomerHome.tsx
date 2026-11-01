@@ -12,13 +12,11 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import api from '../../services/api';
+import api, { getApiErrorMessage } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import ProductCard from '../../components/ProductCard';
 import { Colors } from '../../constants/Colors';
 import { useLanguage } from '../../context/LanguageContext';
-import { formatRWF } from '../../constants/i18n';
-import { getApiErrorMessage } from '../../services/api';
 
 const CATEGORIES = ['All', 'Clothes', 'Shoes', 'Bags', 'Household', 'Jewelry', 'Cosmetics'];
 const POLL_INTERVAL_MS = 6000;
@@ -34,7 +32,7 @@ export default function CustomerHome() {
     const [productsError, setProductsError] = useState<string | null>(null);
     const [pendingOrders, setPendingOrders] = useState<any[]>(cachedPendingOrders);
     const [selectedCategory, setSelectedCategory] = useState('All');
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -45,9 +43,8 @@ export default function CustomerHome() {
         return `#ORD-${id.replace(/-/g, '').slice(0, 5).toUpperCase()}`;
     };
 
-    const fetchData = useCallback(async (silent = false) => {
+    const fetchData = useCallback(async () => {
         try {
-            if (!silent && products.length === 0) setLoading(true);
             const productsPromise = api.get('/products/');
             const ordersPromise = token
                 ? api.get('/orders/').catch(() => ({ data: [] }))
@@ -70,25 +67,28 @@ export default function CustomerHome() {
             setLoading(false);
             setRefreshing(false);
         }
-    }, [token, products.length]);
+    }, [token]);
 
     useEffect(() => {
-        fetchData();
+        const initialLoad = setTimeout(() => {
+            void fetchData();
+        }, 0);
 
         if (token) {
             pollRef.current = setInterval(() => {
-                fetchData(true);
+                fetchData();
             }, POLL_INTERVAL_MS);
         }
 
         return () => {
+            clearTimeout(initialLoad);
             if (pollRef.current) clearInterval(pollRef.current);
         };
     }, [fetchData, token]);
 
     const onRefresh = () => {
         setRefreshing(true);
-        fetchData(true);
+        fetchData();
     };
 
     const handleConfirmDeliveryFromBanner = (order: any) => {
@@ -119,9 +119,9 @@ export default function CustomerHome() {
                                     lang === 'rw' ? 'ryemejwe!' : lang === 'fr' ? 'confirmée!' : 'confirmed!'
                                 }`
                             );
-                            fetchData(true);
+                            fetchData();
                         } catch {
-                            fetchData(true);
+                            fetchData();
                         }
                     },
                 },

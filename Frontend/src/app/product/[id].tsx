@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -10,17 +10,16 @@ import {
     TouchableOpacity,
     FlatList,
     Dimensions,
-    Platform,
     NativeSyntheticEvent,
     NativeScrollEvent,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import api from '../../services/api';
+import api, { getApiErrorMessage } from '../../services/api';
 import { useCart } from '../../context/CartContext';
-import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/Button';
+import HamburgerMenuModal, { HamburgerIcon } from '../../components/HamburgerMenuModal';
 import { Colors } from '../../constants/Colors';
 import { useLanguage } from '../../context/LanguageContext';
 import { formatRWF } from '../../constants/i18n';
@@ -30,32 +29,36 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 export default function ProductDetailScreen() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
-    const insets = useSafeAreaInsets();
     const { t, lang } = useLanguage();
-    const { user } = useAuth();
     const { cartCount, addToCart } = useCart();
-    const isAdmin = user?.role === 'admin' || user?.is_admin === true;
 
     const [product, setProduct] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [justAdded, setJustAdded] = useState(false);
+    const [menuVisible, setMenuVisible] = useState(false);
 
-    useEffect(() => {
-        if (id) fetchProductDetails();
-    }, [id]);
-
-    const fetchProductDetails = async () => {
+    const fetchProductDetails = useCallback(async () => {
         try {
             setLoading(true);
+            setLoadError(null);
             const res = await api.get(`/products/${id}`);
             setProduct(res.data);
-        } catch (e) {
-            console.warn('Failed to fetch product details', e);
+        } catch (error) {
+            setProduct(null);
+            setLoadError(getApiErrorMessage(error, 'Could not load this product.'));
         } finally {
             setLoading(false);
         }
-    };
+    }, [id]);
+
+    useEffect(() => {
+        const productLoad = setTimeout(() => {
+            if (id) void fetchProductDetails();
+        }, 0);
+        return () => clearTimeout(productLoad);
+    }, [id, fetchProductDetails]);
 
     const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
         const offsetX = event.nativeEvent.contentOffset.x;
@@ -65,7 +68,7 @@ export default function ProductDetailScreen() {
         }
     };
 
-    if (loading || !product) {
+    if (loading) {
         return (
             <SafeAreaView style={styles.centerContainer}>
                 <ActivityIndicator color={Colors.primary} size="large" />
@@ -74,11 +77,19 @@ export default function ProductDetailScreen() {
         );
     }
 
+    if (!product) {
+        return (
+            <SafeAreaView style={styles.centerContainer}>
+                <Ionicons name="alert-circle-outline" size={40} color={Colors.error} />
+                <Text style={styles.loadingText}>{loadError || 'Product not found.'}</Text>
+                <Button title="Try again" onPress={fetchProductDetails} />
+            </SafeAreaView>
+        );
+    }
+
     const rawImages: string[] = Array.isArray(product?.images) ? product.images : [];
     const validImages = rawImages.filter((img: any) => typeof img === 'string' && img.startsWith('http'));
-    const images: string[] = validImages.length > 0
-        ? validImages
-        : ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80'];
+    const images = validImages;
 
     const isOutOfStock = (product.quantity ?? 0) <= 0;
 
@@ -93,10 +104,6 @@ export default function ProductDetailScreen() {
         setJustAdded(true);
         setTimeout(() => setJustAdded(false), 2000);
     };
-
-    const isAndroid = Platform.OS === 'android';
-    const bottomPadding = insets.bottom > 0 ? insets.bottom : (isAndroid ? 10 : 6);
-    const tabHeight = 54 + bottomPadding;
 
     return (
         <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -113,18 +120,21 @@ export default function ProductDetailScreen() {
                 <Text style={styles.topBarTitle} numberOfLines={1}>
                     {product.name}
                 </Text>
-                <TouchableOpacity
-                    style={styles.cartShortcut}
-                    onPress={() => router.push('/(tabs)/tab3')}
-                    activeOpacity={0.7}
-                >
-                    <Ionicons name="cart-outline" size={24} color={Colors.text} />
-                    {cartCount > 0 && (
-                        <View style={styles.headerBadge}>
-                            <Text style={styles.headerBadgeText}>{cartCount}</Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
+                <View style={styles.topBarActions}>
+                    <TouchableOpacity
+                        style={styles.cartShortcut}
+                        onPress={() => router.push('/(tabs)/tab3')}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="cart-outline" size={24} color={Colors.text} />
+                        {cartCount > 0 && (
+                            <View style={styles.headerBadge}>
+                                <Text style={styles.headerBadgeText}>{cartCount}</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                    <HamburgerIcon onPress={() => setMenuVisible(true)} />
+                </View>
             </View>
 
             <ScrollView
@@ -134,29 +144,37 @@ export default function ProductDetailScreen() {
             >
                 {/* Horizontal Swipeable Image Gallery */}
                 <View style={styles.carouselContainer}>
-                    <FlatList
-                        data={images}
-                        horizontal
-                        pagingEnabled
-                        showsHorizontalScrollIndicator={false}
-                        keyExtractor={(_, index) => index.toString()}
-                        onMomentumScrollEnd={handleScroll}
-                        renderItem={({ item }) => (
-                            <Image
-                                source={{ uri: item }}
-                                style={styles.carouselImage}
-                                resizeMode="cover"
-                            />
-                        )}
-                    />
+                    {images.length > 0 ? (
+                        <FlatList
+                            data={images}
+                            horizontal
+                            pagingEnabled
+                            showsHorizontalScrollIndicator={false}
+                            keyExtractor={(_, index) => index.toString()}
+                            onMomentumScrollEnd={handleScroll}
+                            renderItem={({ item }) => (
+                                <Image
+                                    source={{ uri: item }}
+                                    style={styles.carouselImage}
+                                    resizeMode="cover"
+                                />
+                            )}
+                        />
+                    ) : (
+                        <View style={styles.imagePlaceholder}>
+                            <Ionicons name="image-outline" size={48} color={Colors.textLight} />
+                        </View>
+                    )}
 
                     {/* Image Counter Badge */}
-                    <View style={styles.counterBadge}>
-                        <Ionicons name="images-outline" size={13} color="#FFFFFF" style={{ marginRight: 4 }} />
-                        <Text style={styles.counterBadgeText}>
-                            {activeImageIndex + 1}/{images.length}
-                        </Text>
-                    </View>
+                    {images.length > 0 && (
+                        <View style={styles.counterBadge}>
+                            <Ionicons name="images-outline" size={13} color="#FFFFFF" style={{ marginRight: 4 }} />
+                            <Text style={styles.counterBadgeText}>
+                                {activeImageIndex + 1}/{images.length}
+                            </Text>
+                        </View>
+                    )}
 
                     {/* Pagination Dots */}
                     {images.length > 1 && (
@@ -231,62 +249,10 @@ export default function ProductDetailScreen() {
                 </View>
             </ScrollView>
 
-            {/* Bottom Tabs Bar: Kept permanently visible while browsing products */}
-            <View style={[styles.bottomTabBar, { height: tabHeight, paddingBottom: bottomPadding }]}>
-                <TouchableOpacity
-                    style={styles.tabItem}
-                    onPress={() => router.replace('/(tabs)/tab1')}
-                    activeOpacity={0.7}
-                >
-                    <Ionicons name={isAdmin ? 'grid-outline' : 'home-outline'} size={22} color={Colors.textMuted} />
-                    <Text style={styles.tabLabel}>{isAdmin ? 'Dashboard' : 'Home'}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.tabItem}
-                    onPress={() => router.replace('/(tabs)/tab2')}
-                    activeOpacity={0.7}
-                >
-                    <Ionicons name={isAdmin ? 'cube-outline' : 'search-outline'} size={22} color={Colors.textMuted} />
-                    <Text style={styles.tabLabel}>{isAdmin ? 'Products' : 'Search'}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.tabItem}
-                    onPress={() => router.replace('/(tabs)/tab3')}
-                    activeOpacity={0.7}
-                >
-                    <View style={styles.tabIconWrapper}>
-                        <Ionicons name={isAdmin ? 'checkmark-done-circle-outline' : 'cart-outline'} size={24} color={Colors.primary} />
-                        {!isAdmin && cartCount > 0 && (
-                            <View style={styles.tabBadge}>
-                                <Text style={styles.tabBadgeText}>{cartCount}</Text>
-                            </View>
-                        )}
-                    </View>
-                    <Text style={[styles.tabLabel, { color: Colors.primary, fontWeight: '700' }]}>
-                        {isAdmin ? 'Deliveries' : 'Cart'}
-                    </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.tabItem}
-                    onPress={() => router.replace('/(tabs)/tab4')}
-                    activeOpacity={0.7}
-                >
-                    <Ionicons name={isAdmin ? 'bar-chart-outline' : 'list-outline'} size={22} color={Colors.textMuted} />
-                    <Text style={styles.tabLabel}>{isAdmin ? 'Reports' : 'Orders'}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.tabItem}
-                    onPress={() => router.replace('/(tabs)/profile')}
-                    activeOpacity={0.7}
-                >
-                    <Ionicons name="person-outline" size={22} color={Colors.textMuted} />
-                    <Text style={styles.tabLabel}>Profile</Text>
-                </TouchableOpacity>
-            </View>
+            <HamburgerMenuModal
+                visible={menuVisible}
+                onClose={() => setMenuVisible(false)}
+            />
         </SafeAreaView>
     );
 }
@@ -319,10 +285,15 @@ const styles = StyleSheet.create({
         padding: 4,
     },
     topBarTitle: {
+        flex: 1,
         fontSize: 16,
         fontWeight: '800',
         color: Colors.text,
-        maxWidth: 220,
+        marginHorizontal: 10,
+    },
+    topBarActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     cartShortcut: {
         padding: 4,
@@ -351,6 +322,11 @@ const styles = StyleSheet.create({
         width: SCREEN_WIDTH,
         height: 320,
         backgroundColor: '#F1F5F9',
+    },
+    imagePlaceholder: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     carouselImage: {
         width: SCREEN_WIDTH,
@@ -480,48 +456,5 @@ const styles = StyleSheet.create({
         marginTop: 4,
         borderRadius: 14,
         paddingVertical: 14,
-    },
-    bottomTabBar: {
-        flexDirection: 'row',
-        backgroundColor: '#FFFFFF',
-        borderTopWidth: 1,
-        borderTopColor: Colors.border,
-        paddingTop: 6,
-        elevation: 10,
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
-    },
-    tabItem: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    tabIconWrapper: {
-        position: 'relative',
-    },
-    tabBadge: {
-        position: 'absolute',
-        top: -4,
-        right: -8,
-        backgroundColor: '#EF4444',
-        borderRadius: 8,
-        minWidth: 16,
-        height: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 3,
-    },
-    tabBadgeText: {
-        color: '#FFFFFF',
-        fontSize: 9,
-        fontWeight: '800',
-    },
-    tabLabel: {
-        fontSize: 11,
-        fontWeight: '600',
-        color: Colors.textMuted,
-        marginTop: 2,
     },
 });

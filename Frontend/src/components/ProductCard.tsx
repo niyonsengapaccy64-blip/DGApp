@@ -10,7 +10,7 @@ export default function ProductCard({ product }: { product: any }) {
 
     const rawImages: string[] = Array.isArray(product?.images) ? product.images : [];
     const validImages = rawImages.filter((img: any) => typeof img === 'string' && img.startsWith('http'));
-    const imageUrl = validImages[0] || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80';
+    const imageUrl = validImages[0];
     const imageCount = validImages.length;
 
     return (
@@ -20,7 +20,13 @@ export default function ProductCard({ product }: { product: any }) {
             activeOpacity={0.85}
         >
             <View style={styles.imageWrapper}>
-                <Image source={{ uri: imageUrl }} style={styles.image} />
+                {imageUrl ? (
+                    <Image source={{ uri: imageUrl }} style={styles.image} />
+                ) : (
+                    <View style={styles.imagePlaceholder}>
+                        <Ionicons name="image-outline" size={28} color={Colors.textLight} />
+                    </View>
+                )}
                 {imageCount > 1 && (
                     <View style={styles.imageBadge}>
                         <Ionicons name="images-outline" size={11} color="#FFFFFF" style={{ marginRight: 3 }} />
@@ -69,6 +75,12 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
         resizeMode: 'cover',
+    },
+    imagePlaceholder: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: Colors.cardMuted,
     },
     imageBadge: {
         position: 'absolute',
